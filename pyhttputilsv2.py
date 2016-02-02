@@ -872,23 +872,7 @@ def generateRequestv2 (method, url, headers=None, payload=None, chunk_size=0,ver
                     request_body.append(urlencode_payload)
                  
 
-                # for header,value in headers :        
-                #     if "Cookie" not in header:
-                #         request_headers.append("%s: %s" %(header, value))
-                #     else:
-                #         cookie_header_value = ""
-                #         for cookie_name, cookie_value in value.items():
-                #             cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
-                #         request_headers.append ("%s: %s" %(header, cookie_header_value))
-                
-                # request_headers.append("")
-                # request_headers.append("")
-                
-                
-                
-                
-                
-                # return (request_headers,request_body)
+
             
             elif post_type == POST_TYPE_MULTIPART:
                
@@ -905,24 +889,6 @@ def generateRequestv2 (method, url, headers=None, payload=None, chunk_size=0,ver
                     request_body.append(multipart_payload[0])
                 
                 
-                # for header,value in headers.items():
-                #     if "Cookie" not in header:
-                #         request_headers.append("%s: %s" %(header, value))
-                #     else:
-                #         cookie_header_value = ""
-                #         for cookie_name, cookie_value in value.items():
-                #             cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
-                #         request_headers.append ("%s: %s" %(header, cookie_header_value))
-                
-                
-                # request_headers.append("")
-                # request_headers.append("")
-                
-                
-                
-                # return (request_headers,request_body)
-                
-                #return "\r\n".join(request)+multipart_payload[0]
             
             elif post_type == POST_TYPE_RAW:
 
@@ -937,46 +903,11 @@ def generateRequestv2 (method, url, headers=None, payload=None, chunk_size=0,ver
                     request_body.append(payload)
 
         
-
-
-                # for header,value in headers:
-                #     if "Cookie" not in header:
-                #         request_headers.append("%s: %s" %(header, value))
-                #     else:
-                #         cookie_header_value = ""
-                #         for cookie_name, cookie_value in value.items():
-                #             cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
-                #         request_headers.append ("%s: %s" %(header, cookie_header_value))
-                
-                
-                # request_headers.append("")
-                # request_headers.append("")                
-                
-                
-                
-                
-                # return (request_headers,request_body)
-                #return "\r\n".join(request)
-            
-
             
         else:
             request_body = []
             #request.append("Content-Type : application/x-www-form-urlencoded")
             request_headers.append("Content-Length: 0")
-            
-            # for header,value in headers.items():
-            #         if "Cookie" not in header:
-            #             request_headers.append("%s: %s" %(header, value))
-            #         else:
-            #             cookie_header_value = ""
-            #             for cookie_name, cookie_value in value.items():
-            #                 cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
-            #             request_headers.append ("%s: %s" %(header, cookie_header_value))
-            
-            
-            # request_headers.append("")
-            # request_headers.append("")
             
 
         for header,value in headers:
@@ -1012,45 +943,11 @@ def generateRequestv2 (method, url, headers=None, payload=None, chunk_size=0,ver
 
         
 
-
-                # for header,value in headers:
-                #     if "Cookie" not in header:
-                #         request_headers.append("%s: %s" %(header, value))
-                #     else:
-                #         cookie_header_value = ""
-                #         for cookie_name, cookie_value in value.items():
-                #             cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
-                #         request_headers.append ("%s: %s" %(header, cookie_header_value))
-                
-                
-                # request_headers.append("")
-                # request_headers.append("")                
-                
-                
-                
-                
-                # return (request_headers,request_body)
-                #return "\r\n".join(request)
-            
-
             
         else:
             request_body = []
             #request.append("Content-Type : application/x-www-form-urlencoded")
             request_headers.append("Content-Length: 0")
-            
-            # for header,value in headers.items():
-            #         if "Cookie" not in header:
-            #             request_headers.append("%s: %s" %(header, value))
-            #         else:
-            #             cookie_header_value = ""
-            #             for cookie_name, cookie_value in value.items():
-            #                 cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
-            #             request_headers.append ("%s: %s" %(header, cookie_header_value))
-            
-            
-            # request_headers.append("")
-            # request_headers.append("")
             
 
         for header,value in headers:
