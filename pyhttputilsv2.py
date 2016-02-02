@@ -553,7 +553,7 @@ def generateRequest (method, url, headers=None,payload=None,chunk_size=0,version
     if headers == None:
         headers = {}
         
-    
+    # @todo: change the process for request building. Play from payload and not from method.
     
     if (method.lower().strip() == "get"):
         if payload:
