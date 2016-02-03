@@ -1017,8 +1017,8 @@ def generateRequestv2 (method, url, headers=None, payload=None, chunk_size=0,ver
 
         
             
-        request_headers.append("") 
-        request_headers.append("")       
+    request_headers.append("") 
+    request_headers.append("")       
        
    
 

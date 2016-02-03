@@ -10,7 +10,7 @@
 	],
 	"settings":
 	{
-		"python_interpreter": "/usr/bin/python3",
-		"env": {"PYTHONPATH":"/Users/aliev/env/lib/python2.7/site-packages"},
+		"python_interpreter": "/usr/bin/python3.5",
+		"env": {"PYTHONPATH":"/home/bykov/Projects/pyhttputils"},
 	}
 }

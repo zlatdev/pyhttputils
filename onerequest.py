@@ -14,9 +14,9 @@ req = {
         "Origin":"catch.me",
     },
 
-    "payload":{
-        "param":"<script>alert</script>"
-    },
+    # "payload":{
+    #     "param":"<script>alert</script>"
+    # },
     # "payload":"""<?xml version="1.0" encoding="UTF-8" ?>
     # # <root>
     # #     <name1>test</name>
