@@ -12,6 +12,7 @@ req = {
         "Referer":"http://catch.me",
         "Content-Type":"text/xml",
         "Origin":"catch.me",
+        "Cookies": "a=b",
     },
 
     # "payload":{

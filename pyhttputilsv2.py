@@ -524,261 +524,261 @@ def generateMultipartPayload (data):
     return  (DEFAULT_HTTP_DELIMETER.join(multipartdata),boundary)
     
 
-def generateRequest (method, url, headers=None,payload=None,chunk_size=0,version="HTTP/1.1",post_type=POST_TYPE_URLENCODED):
-    """
-    Function generate request from parameters
+# def generateRequest (method, url, headers=None,payload=None,chunk_size=0,version="HTTP/1.1",post_type=POST_TYPE_URLENCODED):
+#     """
+#     Function generate request from parameters
 
-    @param method: request method
-    @type method: string
-    @param url: requested url
-    @type url: string
-    @param headers: list of headers
-    @type headers: dict
-    @param payload: data which send with 
-    @type payload: any
-    @param chunk_size: chunk size for Chunked requests. if 0, request is not chunked
-    @type chunk_size: integer
-    @param version: http version
-    @type version: string
-    @param post_type: encoding for data: 0 - urlencoding for GET and POST requests, 1 - multipart, 2 - raw data as is 
-    @type post_type: integer
+#     @param method: request method
+#     @type method: string
+#     @param url: requested url
+#     @type url: string
+#     @param headers: list of headers
+#     @type headers: dict
+#     @param payload: data which send with 
+#     @type payload: any
+#     @param chunk_size: chunk size for Chunked requests. if 0, request is not chunked
+#     @type chunk_size: integer
+#     @param version: http version
+#     @type version: string
+#     @param post_type: encoding for data: 0 - urlencoding for GET and POST requests, 1 - multipart, 2 - raw data as is 
+#     @type post_type: integer
     
      
-    """
+#     """
 
     
-    request_headers = []
-    request_body = []
-    request_str = "%s %s %s"
-    if headers == None:
-        headers = {}
+#     request_headers = []
+#     request_body = []
+#     request_str = "%s %s %s"
+#     if headers == None:
+#         headers = {}
         
-    # @todo: change the process for request building. Play from payload and not from method.
+#     # @todo: change the process for request building. Play from payload and not from method.
 
-    #move payload preparing
-
-
+#     #move payload preparing
 
 
 
-    if (method.lower().strip() == "get"):
-        if payload:
-            if post_type == POST_TYPE_URLENCODED:
-                request_headers.append(request_str % (method.upper(), url+"?"+ generateURLEncodedPayload(payload), version))
-            elif post_type == POST_TYPE_MULTIPART or post_type == POST_TYPE_RAW :
-                request_headers.append(request_str % (method.upper(), url+"?"+str(payload), version))
-            else:
-                request_headers.append(request_str % (method.upper(), url+"?"+ generateURLEncodedPayload(payload,not_urlenc = True ), version))
-        else:
-            request_headers.append(request_str % (method.upper(), url, version))
+
+
+#     if (method.lower().strip() == "get"):
+#         if payload:
+#             if post_type == POST_TYPE_URLENCODED:
+#                 request_headers.append(request_str % (method.upper(), url+"?"+ generateURLEncodedPayload(payload), version))
+#             elif post_type == POST_TYPE_MULTIPART or post_type == POST_TYPE_RAW :
+#                 request_headers.append(request_str % (method.upper(), url+"?"+str(payload), version))
+#             else:
+#                 request_headers.append(request_str % (method.upper(), url+"?"+ generateURLEncodedPayload(payload,not_urlenc = True ), version))
+#         else:
+#             request_headers.append(request_str % (method.upper(), url, version))
             
         
-        for header,value in headers.items():
-            if "Cookie" not in header:
-                request_headers.append("%s: %s" %(header, value))
-            else:
-                cookie_header_value = ""
-                for cookie_name, cookie_value in value.items():
-                    cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
-                request_headers.append ("%s: %s" %(header, cookie_header_value))
+#         for header,value in headers.items():
+#             if "Cookie" not in header:
+#                 request_headers.append("%s: %s" %(header, value))
+#             else:
+#                 cookie_header_value = ""
+#                 for cookie_name, cookie_value in value.items():
+#                     cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
+#                 request_headers.append ("%s: %s" %(header, cookie_header_value))
 
         
             
-        request_headers.append("") 
-        request_headers.append("")
+#         request_headers.append("") 
+#         request_headers.append("")
         
-        request_body=""
-        return (request_headers, request_body)
+#         request_body=""
+#         return (request_headers, request_body)
         
         
-    elif (method.lower().strip() == "post"):
+#     elif (method.lower().strip() == "post"):
         
-        request_headers.append(request_str % (method.upper(), url, version))
+#         request_headers.append(request_str % (method.upper(), url, version))
         
-        if method.lower().strip()=="post" and payload:
+#         if method.lower().strip()=="post" and payload:
             
-            if post_type == POST_TYPE_URLENCODED:
-                urlencode_payload = generateURLEncodedPayload(payload)
+#             if post_type == POST_TYPE_URLENCODED:
+#                 urlencode_payload = generateURLEncodedPayload(payload)
                 
-                request_headers.append("Content-Type: application/x-www-form-urlencoded")
+#                 request_headers.append("Content-Type: application/x-www-form-urlencoded")
                 
-                if chunk_size>0:
-                    request_headers.append("Transfer-Encoding: chunked")
+#                 if chunk_size>0:
+#                     request_headers.append("Transfer-Encoding: chunked")
                    
                     
-                    f = StringIO(urlencode_payload)
+#                     f = StringIO(urlencode_payload)
             
-                    chunk = f.read(chunk_size)
-                    while len(chunk)>0:
-                        request_body.append(str(hex(len(chunk)))[2:])
-                        request_body.append(chunk)
-                        chunk = f.read(chunk_size)
-                    else:
-                        request_body.append("0")
-                        request_body.append("")
-                        request_body.append("")
+#                     chunk = f.read(chunk_size)
+#                     while len(chunk)>0:
+#                         request_body.append(str(hex(len(chunk)))[2:])
+#                         request_body.append(chunk)
+#                         chunk = f.read(chunk_size)
+#                     else:
+#                         request_body.append("0")
+#                         request_body.append("")
+#                         request_body.append("")
                 
-                    request_body = DEFAULT_HTTP_DELIMETER.join(request_body)
+#                     request_body = DEFAULT_HTTP_DELIMETER.join(request_body)
                 
                 
-                else:
+#                 else:
                 
                     
-                    request_headers.append("Content-Length: %d" % len(urlencode_payload))
-                    request_body = urlencode_payload
+#                     request_headers.append("Content-Length: %d" % len(urlencode_payload))
+#                     request_body = urlencode_payload
                 
-                for header,value in headers.items():        
-                    if "Cookie" not in header:
-                        request_headers.append("%s: %s" %(header, value))
-                    else:
-                        cookie_header_value = ""
-                        for cookie_name, cookie_value in value.items():
-                            cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
-                        request_headers.append ("%s: %s" %(header, cookie_header_value))
+#                 for header,value in headers.items():        
+#                     if "Cookie" not in header:
+#                         request_headers.append("%s: %s" %(header, value))
+#                     else:
+#                         cookie_header_value = ""
+#                         for cookie_name, cookie_value in value.items():
+#                             cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
+#                         request_headers.append ("%s: %s" %(header, cookie_header_value))
                 
-                request_headers.append("")
-                request_headers.append("")
-                
-                
+#                 request_headers.append("")
+#                 request_headers.append("")
                 
                 
                 
-                return (request_headers,request_body)
+                
+                
+#                 return (request_headers,request_body)
             
-            elif post_type == POST_TYPE_MULTIPART:
+#             elif post_type == POST_TYPE_MULTIPART:
                
-                multipart_payload = generateMultipartPayload(payload)
+#                 multipart_payload = generateMultipartPayload(payload)
                 
                 
-                request_headers.append("Content-Type: multipart/form-data; boundary=%s" % multipart_payload[1])
+#                 request_headers.append("Content-Type: multipart/form-data; boundary=%s" % multipart_payload[1])
                 
-                if (chunk_size>0):
-                    request_headers.append("Transfer-Encoding: chunked")
+#                 if (chunk_size>0):
+#                     request_headers.append("Transfer-Encoding: chunked")
                     
-                    f = StringIO(multipart_payload[0])
+#                     f = StringIO(multipart_payload[0])
             
-                    chunk = f.read(chunk_size)
-                    while len(chunk)>0:
-                        request_body.append(str(hex(len(chunk)))[2:])
-                        request_body.append(chunk)
-                        chunk = f.read(chunk_size)
-                    else:
-                        request_body.append("0")
-                        request_body.append("")
-                        request_body.append("")
+#                     chunk = f.read(chunk_size)
+#                     while len(chunk)>0:
+#                         request_body.append(str(hex(len(chunk)))[2:])
+#                         request_body.append(chunk)
+#                         chunk = f.read(chunk_size)
+#                     else:
+#                         request_body.append("0")
+#                         request_body.append("")
+#                         request_body.append("")
                         
-                        request_body = DEFAULT_HTTP_DELIMETER.join(request_body)
-                else:
-                    request_headers.append("Content-Length: %d" % len(multipart_payload[0]))
+#                         request_body = DEFAULT_HTTP_DELIMETER.join(request_body)
+#                 else:
+#                     request_headers.append("Content-Length: %d" % len(multipart_payload[0]))
                     
-                    request_body=multipart_payload[0]
+#                     request_body=multipart_payload[0]
                 
                 
-                for header,value in headers.items():
-                    if "Cookie" not in header:
-                        request_headers.append("%s: %s" %(header, value))
-                    else:
-                        cookie_header_value = ""
-                        for cookie_name, cookie_value in value.items():
-                            cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
-                        request_headers.append ("%s: %s" %(header, cookie_header_value))
+#                 for header,value in headers.items():
+#                     if "Cookie" not in header:
+#                         request_headers.append("%s: %s" %(header, value))
+#                     else:
+#                         cookie_header_value = ""
+#                         for cookie_name, cookie_value in value.items():
+#                             cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
+#                         request_headers.append ("%s: %s" %(header, cookie_header_value))
                 
                 
-                request_headers.append("")
-                request_headers.append("")
+#                 request_headers.append("")
+#                 request_headers.append("")
                 
                 
                 
-                return (request_headers,request_body)
+#                 return (request_headers,request_body)
                 
-                #return "\r\n".join(request)+multipart_payload[0]
+#                 #return "\r\n".join(request)+multipart_payload[0]
             
-            elif post_type == POST_TYPE_RAW:
-                if chunk_size > 0:
-                    request_headers.append("Transfer-Encoding: chunked")
+#             elif post_type == POST_TYPE_RAW:
+#                 if chunk_size > 0:
+#                     request_headers.append("Transfer-Encoding: chunked")
                     
                     
-                    f = StringIO(str(payload))
+#                     f = StringIO(str(payload))
             
-                    chunk = f.read(chunk_size)
-                    request_body = []
-                    while len(chunk)>0:
-                        request_body.append(str(hex(len(chunk)))[2:])
-                        request_body.append(chunk)
-                        chunk = f.read(chunk_size)
-                    else:
-                        request_body.append("0")
-                        request_body.append("")
-                        request_body.append("")
-                        request_body = DEFAULT_HTTP_DELIMETER.join(request_body)
-                else:
-                    request_headers.append("Content-Length: %d" % len(str(payload)))
-                    request_body = str(payload)
+#                     chunk = f.read(chunk_size)
+#                     request_body = []
+#                     while len(chunk)>0:
+#                         request_body.append(str(hex(len(chunk)))[2:])
+#                         request_body.append(chunk)
+#                         chunk = f.read(chunk_size)
+#                     else:
+#                         request_body.append("0")
+#                         request_body.append("")
+#                         request_body.append("")
+#                         request_body = DEFAULT_HTTP_DELIMETER.join(request_body)
+#                 else:
+#                     request_headers.append("Content-Length: %d" % len(str(payload)))
+#                     request_body = str(payload)
 
 
-                for header,value in headers.items():
-                    if "Cookie" not in header:
-                        request_headers.append("%s: %s" %(header, value))
-                    else:
-                        cookie_header_value = ""
-                        for cookie_name, cookie_value in value.items():
-                            cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
-                        request_headers.append ("%s: %s" %(header, cookie_header_value))
+#                 for header,value in headers.items():
+#                     if "Cookie" not in header:
+#                         request_headers.append("%s: %s" %(header, value))
+#                     else:
+#                         cookie_header_value = ""
+#                         for cookie_name, cookie_value in value.items():
+#                             cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
+#                         request_headers.append ("%s: %s" %(header, cookie_header_value))
                 
                 
-                request_headers.append("")
-                request_headers.append("")                
+#                 request_headers.append("")
+#                 request_headers.append("")                
                 
                 
                 
                 
-                return (request_headers,request_body)
-                #return "\r\n".join(request)
+#                 return (request_headers,request_body)
+#                 #return "\r\n".join(request)
             
 
             
-        else:
-            #request.append("Content-Type : application/x-www-form-urlencoded")
-            request_headers.append("Content-Length: 0")
+#         else:
+#             #request.append("Content-Type : application/x-www-form-urlencoded")
+#             request_headers.append("Content-Length: 0")
             
-            for header,value in headers.items():
-                    if "Cookie" not in header:
-                        request_headers.append("%s: %s" %(header, value))
-                    else:
-                        cookie_header_value = ""
-                        for cookie_name, cookie_value in value.items():
-                            cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
-                        request_headers.append ("%s: %s" %(header, cookie_header_value))
-            
-            
-            request_headers.append("")
-            request_headers.append("")
-            request_body = None
-            
-            return (request_headers, request_body)
+#             for header,value in headers.items():
+#                     if "Cookie" not in header:
+#                         request_headers.append("%s: %s" %(header, value))
+#                     else:
+#                         cookie_header_value = ""
+#                         for cookie_name, cookie_value in value.items():
+#                             cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
+#                         request_headers.append ("%s: %s" %(header, cookie_header_value))
             
             
-    else:
-        if payload:
-            request_headers.append(request_str % (method.upper(), url, version))
-            request_headers.append("Content-Length: %d" % len(str(payload)))
-            request_body = str(payload)
-        else:
-            request_headers.append(request_str % (method.upper(), url, version))
-            request_body = ""
+#             request_headers.append("")
+#             request_headers.append("")
+#             request_body = None
+            
+#             return (request_headers, request_body)
+            
+            
+#     else:
+#         if payload:
+#             request_headers.append(request_str % (method.upper(), url, version))
+#             request_headers.append("Content-Length: %d" % len(str(payload)))
+#             request_body = str(payload)
+#         else:
+#             request_headers.append(request_str % (method.upper(), url, version))
+#             request_body = ""
         
-        for header,value in headers.items():
-            if "Cookie" not in header:
-                request_headers.append("%s: %s" %(header, value))
-            else:
-                cookie_header_value = ""
-                for cookie_name, cookie_value in value.items():
-                    cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
-                request_headers.append ("%s: %s" %(header, cookie_header_value))
+#         for header,value in headers.items():
+#             if "Cookie" not in header:
+#                 request_headers.append("%s: %s" %(header, value))
+#             else:
+#                 cookie_header_value = ""
+#                 for cookie_name, cookie_value in value.items():
+#                     cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
+#                 request_headers.append ("%s: %s" %(header, cookie_header_value))
 
-        request_headers.append("") 
-        request_headers.append("")
-        return (request_headers,request_body) 
+#         request_headers.append("") 
+#         request_headers.append("")
+#         return (request_headers,request_body) 
 
 
 def generateRequestv2 (method, url, headers=None, payload=None, chunk_size=0,version="HTTP/1.1",post_type=POST_TYPE_URLENCODED):
@@ -835,26 +835,7 @@ def generateRequestv2 (method, url, headers=None, payload=None, chunk_size=0,ver
             request_headers.append(request_str % (method.upper(), url+"?"+ ready_payload[0], version))            
         else:
             request_headers.append(request_str % (method.upper(), url, version))
-        
-        # for header,value in headers:
-        #     if "Cookie" not in header:
-        #         request_headers.append("%s: %s" %(header, value))
-        #     else:
-        #         cookie_header_value = ""
-        #         for cookie_name, cookie_value in value.items():
-        #             cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
-        #         request_headers.append ("%s: %s" %(header, cookie_header_value))
-
-        
-            
-        # request_headers.append("") 
-        # request_headers.append("")
-        
         request_body=[]
-   
-
-        # return (request_headers, request_body)
-        
         
     elif (method.lower().strip() == "post"):
         
@@ -865,83 +846,51 @@ def generateRequestv2 (method, url, headers=None, payload=None, chunk_size=0,ver
             if post_type == POST_TYPE_URLENCODED:
             
                 request_headers.append("Content-Type: application/x-www-form-urlencoded")                
-                # replace chunks send to send_request functions for more accurate 
-                # 
-                #
-                # if chunk_size>0:
-                #     request_headers.append("Transfer-Encoding: chunked")    
-                #     request_body = _generateChunkBody(chunk_size,ready_payload[0])
+
+                if chunk_size>0:
+                    request_headers.append("Transfer-Encoding: chunked")    
+                    request_body = _generateChunkBody(chunk_size,ready_payload[0])
                 
-                # else:                
-                #     request_body = []
-                #     request_headers.append("Content-Length: %d" % len(ready_payload[0]))
+                else:                
+                    request_body = []
+                    request_headers.append("Content-Length: %d" % len(ready_payload[0]))
                  
 
-                #     request_body.append(ready_payload[0])
-                request_body = []
-                request_headers.append("Content-Length: %d" % len(ready_payload[0]))
-             
-
-                request_body.append(ready_payload[0])            
-                 
-
-
+                    request_body.append(ready_payload[0])
             
             elif post_type == POST_TYPE_MULTIPART:
                
                 multipart_payload = generateMultipartPayload(payload)
                 request_headers.append("Content-Type: multipart/form-data; boundary=%s" % ready_payload[1])
                 
-                # if (chunk_size>0):
-                #     request_body = _generateChunkBody(chunk_size,multipart_payload[0])
-                #     request_headers.append("Transfer-Encoding: chunked")
-                # else:
-                #     request_body=[]
-                #     request_headers.append("Content-Length: %d" % len(multipart_payload[0]))
+                if (chunk_size>0):
+                    request_body = _generateChunkBody(chunk_size,multipart_payload[0])
+                    request_headers.append("Transfer-Encoding: chunked")
+                else:
+                    request_body=[]
+                    request_headers.append("Content-Length: %d" % len(multipart_payload[0]))
                     
-                #     request_body.append(multipart_payload[0])
-                request_body=[]
-                request_headers.append("Content-Length: %d" % len(ready_payload[0]))
-                
-                request_body.append(ready_payload[0])
+                    request_body.append(multipart_payload[0])
                 
             
             elif post_type == POST_TYPE_RAW:
 
-                # if chunk_size > 0:
+                if chunk_size > 0:
 
-                #     request_headers.append("Transfer-Encoding: chunked")
-                #     request_body = _generateChunkBody(chunk_size,payload)
+                    request_headers.append("Transfer-Encoding: chunked")
+                    request_body = _generateChunkBody(chunk_size,ready_payload[0])
                    
-                # else:
-                #     request_body = []
-                #     request_headers.append("Content-Length: %d" % len(str(payload)))
-                #     request_body.append(payload)
-                request_body = []
-                request_headers.append("Content-Length: %d" % len(ready_payload[0]))
-                request_body.append(ready_payload[0])
-        
+                else:
+                    request_body = []
+                    request_headers.append("Content-Length: %d" % len(str(ready_payload[0])))
+                    request_body.append(ready_payload[0])
+                
             
         else:
             request_body = []
-            #request.append("Content-Type : application/x-www-form-urlencoded")
+    
             request_headers.append("Content-Length: 0")
-            
-
-        # for header,value in headers:
-        #     if "Cookie" not in header:
-        #         request_headers.append("%s: %s" %(header, value))
-        #     else:
-        #         cookie_header_value = ""
-        #         for cookie_name, cookie_value in value.items():
-        #             cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
-        #         request_headers.append ("%s: %s" %(header, cookie_header_value))
-                
-                
-        # request_headers.append("")
-        # request_headers.append("")                
-        # # print (request_headers, request_body)
-        # return (request_headers, request_body)
+           
     
     elif (method.lower().strip() == "patch"):
         
@@ -990,20 +939,8 @@ def generateRequestv2 (method, url, headers=None, payload=None, chunk_size=0,ver
             request_body = str(payload)
         else:
             request_headers.append(request_str % (method.upper(), url, version))
-            request_body = ""
-        
-        for header,value in headers.items():
-            if "Cookie" not in header:
-                request_headers.append("%s: %s" %(header, value))
-            else:
-                cookie_header_value = ""
-                for cookie_name, cookie_value in value.items():
-                    cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
-                request_headers.append ("%s: %s" %(header, cookie_header_value))
-
-        request_headers.append("") 
-        request_headers.append("")
-        return (request_headers,request_body)         
+            request_body = ""        
+             
 
 
     for header,value in headers:
@@ -1011,9 +948,12 @@ def generateRequestv2 (method, url, headers=None, payload=None, chunk_size=0,ver
             request_headers.append("%s: %s" %(header, value))
         else:
             cookie_header_value = ""
-            for cookie_name, cookie_value in value.items():
-                cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
-            request_headers.append ("%s: %s" %(header, cookie_header_value))
+            try:
+                for cookie_name, cookie_value in value.items():
+                    cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
+            except AttributeError:
+                request_headers.append ("%s: %s" %(header, value))
+            
 
         
             
