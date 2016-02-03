@@ -1174,7 +1174,7 @@ def sendRequest(request_obj,host=None,use_ssl=False,sock=None,resp_format=None, 
                     
                         if len_sent != len_request_h:
                             print ("Not full request were send.Drop connection!")
-                            raise socket.error (:"Not full request were send.Drop connection!")
+                            raise socket.error ("Not full request were send.Drop connection!")
                         for req_chunk in request[1]:
                             request_b = DEFAULT_HTTP_DELIMETER.join(req_chunk).encode(DEFAULT_REQUEST_ENCODING)
                             len_request_b = len(request_b)
