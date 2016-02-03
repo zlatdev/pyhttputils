@@ -5,7 +5,7 @@ import pyhttputilsv2
 
 req = {
 
-    "method":"POST",
+    "method":"post",
     "url":"/test.php",
     "headers":{
         "Host":"catch.me",
@@ -14,16 +14,16 @@ req = {
         "Origin":"catch.me",
     },
 
-    # "payload":{
-    #     "param":"<script>alert</script>"
-    # },
-    "payload":"""<?xml version="1.0" encoding="UTF-8" ?>
-    # <root>
-    #     <name1>test</name>
-    #     <group1>group</group>
-    # </root>
-    """,
-    "enctype":2,
+    "payload":{
+        "param":"<script>alert</script>"
+    },
+    # "payload":"""<?xml version="1.0" encoding="UTF-8" ?>
+    # # <root>
+    # #     <name1>test</name>
+    # #     <group1>group</group>
+    # # </root>
+    # """,
+    "enctype":1,
     "resp_format":"all",
     # "chunk_size":100,
 
