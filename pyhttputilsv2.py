@@ -1308,7 +1308,8 @@ def sendRequest(request_obj,host=None,use_ssl=False,sock=None,resp_format=None, 
             session.close()  
             session = None          
         return HTTPResponse(headers = [str(e.errno)],payload = [e.strerror],sock = session)
-            
+    except KeyboardInterrupt:
+        print ("request interrupted!")
 
 
 
