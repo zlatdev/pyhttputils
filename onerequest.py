@@ -5,18 +5,18 @@ import pyhttputilsv2
 
 req = {
 
-    "method":"post",
-    "url":"/test.php",
+    "method":"get",
+    "url":"/",
     "headers":{
-        "Host":"catch.me",
+        "Host":"test25.me",
         "Referer":"http://catch.me",
-        "Content-Type":"text/xml",
+        # "Content-Type":"text/xml",
         "Origin":"catch.me",
         "Cookies": "a=b",
     },
 
     # "payload":{
-    #     "param":"<script>alert</script>"
+    #     "param":"test"
     # },
     # "payload":"""<?xml version="1.0" encoding="UTF-8" ?>
     # # <root>
@@ -24,7 +24,7 @@ req = {
     # #     <group1>group</group>
     # # </root>
     # """,
-    "enctype":1,
+    "enctype":0,
     "resp_format":"all",
     # "chunk_size":100,
 
@@ -57,18 +57,36 @@ req = {
 call = pyhttputilsv2.HTTPRequestv2(**req)
 
 print (call.generateRawRequest())
-for i in range (0,1):
-    # resp = call.getResponse(host=("10.0.210.35",8080))
-    # resp = call.getResponse(host=("10.0.209.148",8080))
-    resp = call.getResponse(host=("10.0.210.45",80))
-# resp = call.getResponse(host=("10.10.10.10",80))
 
-    # resp = call.getResponse(host=("10.0.208.183",80))
-    #
-    # print (resp.status)
-    print (resp.status)
-    print (resp.headers)
-    print (resp.payload)
+resp = call.getResponse(host=("10.0.210.35",80))
+
+print (resp.status)
+print (resp.headers)
+print (resp.payload)
+
+# for i in range (1,100):
+#     if resp.sock:
+#         resp = call.getResponse(sock = resp.sock)
+#     else:
+#         print ("connection dropped")
+#         break
+#     # resp = call.getResponse(host=("10.0.210.35",8080))
+#     # resp = call.getResponse(host=("10.0.209.148",8080))
+#     # resp = call.getResponse(host=("10.0.210.45",80))
+#     # resp = call.getResponse(host=("172.29.70.52",443),use_ssl=True)
+#     # resp = call.getResponse(host=("10.10.10.52",443),use_ssl=True)
+#     # resp = call.getResponse(host=("10.10.10.10",80))
+
+#     # resp = call.getResponse(host=("10.0.208.183",80))
+#     #
+#     # print (resp.status)
+#     print (resp.status)
+#     print (resp.headers)
+#     print (resp.payload)
+
+#     pyhttputilsv2.time.sleep(10)
+
+
 
 
 

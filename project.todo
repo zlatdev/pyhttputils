@@ -1,0 +1,22 @@
+pyhttputils project:
+**this is global project**
+  use aiohttp lib:
+    use async lib for sending requests
+    ☐ learn how aiohttp lib is working @low @created(16-02-19 15:33)
+    ☐ write simple client @low @created(16-02-19 15:34)
+    ☐ write new HTTPRequest and HTTPResponse classes to use the aiohttp lib @low @created(16-02-19 15:34)
+  refactor send request:
+    require to refactor sendrequest function for better usability.
+    ☐ review current code. findout repeated part @critical @created(16-02-19 15:34)
+    --- ✄ -----------------------
+   
+
+
+
+
+＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
+Archive:
+ ✔ testing part: @done (16-02-29 09:28) @project(pyhttputils project)
+ ✔ task3 @high    @done (16-02-29 09:28) @project(pyhttputils project / refactor send request)
+ ✔ task2 @critical    @done (16-02-29 09:28) @project(pyhttputils project / refactor send request)
+ ✔ task1 @done (16-02-19 15:15) @project(pyhttputils project / refactor send request)
