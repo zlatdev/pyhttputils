@@ -999,13 +999,13 @@ def sendRequest(request_obj,host=None,use_ssl=False,sock=None,resp_format=None, 
     #     request = request_obj.generateRequest()
     # el
     if (isinstance(request_obj,dict)):
-        request = generateRequest(**request_obj)
+        request = generateRequestv2(**request_obj)
     elif isinstance(request_obj, HTTPRequestv2):
         request = request_obj.generateRequestv2()
     else:
         request = request_obj
     # print ("02")
-    # print (request)
+    
     try:
         # print ("03")
         if sock:
