@@ -1623,7 +1623,7 @@ class HTTPClientsPools(object):
 
 
 class HTTPClientsTraffic(object):
-    def __init__(self, sessions_list=[],*args, **kwargs):
+    def __init__(self, sessions_list,*args, **kwargs):
         self.sessions = sessions_list             
         
     def run(self):
