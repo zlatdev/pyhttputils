@@ -1087,7 +1087,8 @@ class HTTPSessionv2(object):
         if session_headers:
             self.session_headers = session_headers
             if "Cookie" in self.session_headers:
-                self.session_cookies.setCookies(self.session_headers.pop("Cookie"))
+                self.session_cookies.setCookies(self.session_headers["Cookie"])
+                del self.session_headers["Cookie"]
 
         else:
             self.session_headers = {}
@@ -1107,8 +1108,8 @@ class HTTPSessionv2(object):
         else:
             self.resp_format = "None"
 
-        if flow:
-            self.parseSessionv2(flow)
+        if flow:            
+            self.parseSessionv2(session_flow=flow)
         
     
     def parseSessionv2 (self,session_flow = None, *args, **kwargs):
@@ -1142,7 +1143,9 @@ class HTTPSessionv2(object):
         
         
         
-        for request in session_flow:
+
+        for request in session_flow:      
+
 
             try:
                 method = request["method"]
@@ -1532,7 +1535,7 @@ class HTTPClient(threading.Thread):
 
     def run(self):
         
-        print("session start", threading.currentThread().name, multiprocessing.current_process().name)
+        print("session start", threading.currentThread().name, multiprocessing.current_process().name, "on host:",self.host)
         
         ct = st = time.time()
         while ct-st < self.time:
@@ -1544,7 +1547,7 @@ class HTTPClient(threading.Thread):
             ct = time.time()         
 
         
-        print("session finished", threading.currentThread().name, multiprocessing.current_process().name)
+        print("session finished", threading.currentThread().name, multiprocessing.current_process().name, "on host:",self.host)
 
         return
 

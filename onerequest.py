@@ -5,18 +5,27 @@ import pyhttputilsv2
 
 req = {
 
-    "method":"get",
-    "url":"/",
+    "method":"post",
+    "url":"/phpinfo1.url",
     "headers":{
-        "Host":"test25.me",
+        "Host":"test.as.localy.me",
         "Referer":"http://catch.me",
+        "Accept":"*/*",
         # "Content-Type":"text/xml",
+        "User-Agent":"Yandex Browser 16",
         "Origin":"catch.me",
         "Cookies": "a=b",
+        "Connection": "keep-alive",
+        "XFF":"2.2.254.254",
+        "X-Forwarded-For":"8.8.8.8,1.1.1.1"
     },
-
+    "payload" : {
+        "p":"{} @import url(\"text.css\")".format ("a"*2000000),
+     
+    },
     # "payload":{
-    #     "param":"test"
+    #     "param":"url=*)(objectClass=users))(&(objectClass=foo",
+    #     "param1":"<script>",
     # },
     # "payload":"""<?xml version="1.0" encoding="UTF-8" ?>
     # # <root>
@@ -28,9 +37,9 @@ req = {
     "resp_format":"all",
     # "chunk_size":100,
 
-
-
 }
+
+
 
 
 # req = { 
@@ -58,7 +67,7 @@ call = pyhttputilsv2.HTTPRequestv2(**req)
 
 print (call.generateRawRequest())
 
-resp = call.getResponse(host=("10.0.210.35",80))
+resp = call.getResponse(host=("10.10.10.53",80))
 
 print (resp.status)
 print (resp.headers)
