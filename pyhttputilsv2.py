@@ -11,6 +11,7 @@ from random import sample, randint
 from uuid import uuid4
 from io import StringIO
 from copy import deepcopy
+from base64 import b64encode
 
 import time
 import socket
@@ -18,6 +19,7 @@ import ssl
 import threading
 import multiprocessing
 import argparse
+
 
 BUFF_READ_SIZE = 4096
 
@@ -64,9 +66,9 @@ class HTTPRequestv2(object):
     """
         Class for HTTP request which will be send
     """
-    __slots__ = ("method", "url", "headers","cookies","payload","chunk_size","version","enctype","repeat","resp_format")
+    # __slots__ = ("method", "url", "headers","cookies","payload","chunk_size","version","enctype","repeat","resp_format")
 
-    def __init__ (self,method="GET", url="/", headers=None, payload=None, chunk_size=0, version="HTTP/1.1", enctype=POST_TYPE_URLENCODED, repeat=1, resp_format=None):
+    def __init__ (self,method="GET", url="/", headers=None, auth = None, payload=None, chunk_size=0, version="HTTP/1.1", enctype=POST_TYPE_URLENCODED, repeat=1, resp_format=None):
         """
         Constructor for HTTP request.
         
@@ -93,6 +95,7 @@ class HTTPRequestv2(object):
         self.url = url
         self.headers = []
         self.cookies = HTTPCookies()
+        self.auth = auth
 
         if headers: 
             self.updateRequestHeaders(headers)
@@ -111,10 +114,11 @@ class HTTPRequestv2(object):
         if "Cookie" in headers:
             self.cookies.setCookies(headers["Cookie"])
             del headers["Cookie"]
+        
         for header,value in headers.items():
             self.headers.append((header,value))
 
-
+    
 
     def generateRequest(self):
         """
@@ -124,6 +128,11 @@ class HTTPRequestv2(object):
 
         if self.cookies.getCookies():
             self.headers.append(("Cookie",self.cookies.getCookies()))
+
+        if self.auth:
+            auth_header = ("Authorization", "Basic " + b64encode(('%s:%s' % (self.auth[0], self.auth[1])).encode('ascii')).decode())
+            self.headers.append(auth_header)
+
         
         return generateRequestv2(self.method, self.url, self.headers, self.payload, self.chunk_size, self.version, self.enctype)
     
@@ -1075,6 +1084,7 @@ class HTTPSessionv2(object):
             self.request=None
         else:
             self.request = None
+
         if host:
             self.host = host 
         else:
@@ -1084,6 +1094,7 @@ class HTTPSessionv2(object):
             self.secure = True
         else:
             self.secure = False
+        
         if session_headers:
             self.session_headers = session_headers
             if "Cookie" in self.session_headers:
@@ -1191,7 +1202,9 @@ class HTTPSessionv2(object):
                 repeat = request["repeat"]
             except KeyError:
                 repeat = 1
-                
+            
+       
+
             try:
                 chunk_size = request["chunk_size"]
             except KeyError:
@@ -1212,11 +1225,13 @@ class HTTPSessionv2(object):
                     http_version = "HTTP/1.1"
             
 
-            self.addSessionRequestv2(HTTPRequestv2(method, url, url_headers, url_payload, chunk_size, http_version, enctype, repeat, self.resp_format))
+
+            self.addSessionRequestv2(HTTPRequestv2(method = method, url = url, headers = url_headers, payload = url_payload, chunk_size=chunk_size, version=http_version, enctype = enctype, repeat =repeat, resp_format = self.resp_format))
             
     def addSessionRequestv2 (self,request=None):
 
         if request and isinstance(request,HTTPRequestv2):
+            
             self.session.append(request)        
         elif request and isinstance(request,dict):
             self.session.append(HTTPRequestv2(**request))
@@ -1253,6 +1268,7 @@ class HTTPSessionv2(object):
        
 
         for self.request in self.session:
+            
             for i in range (0, self.request.repeat):
                 # save original headers and cookies
                 req_cookie = self.request.cookies.getCookies().copy()
