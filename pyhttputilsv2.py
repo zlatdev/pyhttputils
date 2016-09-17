@@ -122,15 +122,15 @@ class HTTPRequestv2(object):
         """
         
 
-        if self.cookies.getCookies():
-            self.headers.append(("Cookie",self.cookies.getCookies()))
+        if self.cookies.cookies:
+            self.headers.append(("Cookie",self.cookies.getCookieHeaderValue()))
         
         return generateRequestv2(self.method, self.url, self.headers, self.payload, self.chunk_size, self.version, self.enctype)
     
     def generateRawRequest(self):
-        
+
         request = self.generateRequest()
-        
+
         request_h = DEFAULT_HTTP_DELIMETER.join(request[0])
         # print (request_h)
 
@@ -194,8 +194,10 @@ class HTTPResponse(object):
         else:
             try:
                 self.status = headers[0]
+                self.status_code = int (self.status[9:12])
             except IndexError:
                 self.status = None
+                self.status_code=None
             try:
                 self.headers = headers[1:]
             except IndexError:
@@ -208,233 +210,44 @@ class HTTPResponse(object):
 
 
 
-def _generateSampleAlphaChars (length):
-    """
-        Generate random char string exact length
-        
-        
-        @param length: string length of random string
-        @return: random string 
-        
-    """
-    pop_us = "ABCDEFGHIJKLMNOPQURSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-    if length > len(pop_us):
-        pop= pop_us * (2*int((length/len(pop_us))))
-    else :
-        pop = pop_us
-    return "".join(sample(pop, length))
 
-def _generateSampleAlphaNumMetaChar (length):
-    """
-        Generate random alpha num meta char string exact length
-        
-        
-        @param length: string length of random string
-        @return: random string 
-        
-    """
-    pop_us = "ABCDEFGHIJKLMNOPQURSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(()_+=-<>,./?\`~|\}]{["
-    if length > len(pop_us):
-        pop= pop_us * (2*int((length/len(pop_us))))
-    else :
-        pop = pop_us
-    return "".join(sample(pop, length))
 
-def _generateMultipartBoundary (length):
-    """
-    Generate random boundary for multipart messages
-    """
+class HTTPCookies (object):
     
-    pop_us = "1234567890ABCDEFGHIJKLMNOPQURSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567890"
-    if length > len(pop_us):
-        pop= pop_us * (2*int((length/len(pop_us))))
-    else :
-        pop = pop_us
-    return "".join(sample(pop, length))
-    
-def _generateChunkBody(chunk_size,payload):
-    request_body=[]
-
-def parseCookie (responseHeaders):
-    """
-
-    """
-
-    cookie_pair_list = {}
-    try:
-        for header,value in responseHeaders:
-            if header == "Set-Cookie":
-                try :
-                    cookie = value[:value.index("; ")]
-                except ValueError:
-                    cookie = value
-                else:
-                    n,v = cookie.split("=")
-                    cookie_pair_list.update({n:v})
-            else:
-                continue
-    except ValueError:
-        for cheader in responseHeaders:
-            if cheader.lower().startswith("set-cookie"):
-                s = cheader.index(":")
-                try:
-                    e = cheader.index(";")
-                except ValueError:
-                    e = len(cheader)
-                cookie = cheader[s+1:e]
-                n,v = cookie.split("=")
-                cookie_pair_list.update({n.strip():v.strip()})
-    return cookie_pair_list
-
-def _isChunked (responseHeaders):
-    
-    transferencoding = False
-    
-    
-    try: 
-        for header,value in responseHeaders:
-            if header == "Transfer-Encoding" and value.lower() == "chunked":
-                transferencoding=True
-                break                
-            else:
-                continue
-    except ValueError:
-        for cheader in responseHeaders:
-            if cheader.lower().startswith("transfer-encoding"):
-                header,value = cheader.split(":")
-                if value.lower() == "chunked":
-                    transferencoding == True
-                    break
-                else:
-                    continue
-                
-    return transferencoding
-
-def generateListOfURLS (number, predefined=False,urlftk=0.1):
-    """ 
-    @param number: amount of generated URLS
-    @return: list of generate random urls
-    """
-    url_list = []
-    # while number:
-    #     if predefined:
-    #         url_list.append("/%d_this_is_predefined_url_with_possible_long_name.%dftype" % (number,number))
-    #     else:
-    #         url_list.append("/%s.%s" % (_generateSampleAlphaChars(DEFAULT_LENGTH_URL),_generateSampleAlphaChars(DEFAULT_LENGTH_FT)))
-    #     number -= 1
-
-    for i in range(1,number+1):
-        if predefined:
-            url_list.append("/%d_this_is_predefined_url_with_possible_long_name.%dftype" % (i,int(i*urlftk)))
+    def __init__(self,headers=None,cookies = None):
+        if headers:
+            self.cookies = parseCookie(headers)
         else:
-            url_list.append("/%s.%s" % (_generateSampleAlphaChars(DEFAULT_LENGTH_URL),_generateSampleAlphaChars(DEFAULT_LENGTH_FT)))
-             
+            self.cookies = {}
+        if cookies:
+            self.cookies.update(cookies)
 
-    return url_list
-
-def generateListOfURLSwMetaChars (number):
-    """ 
-    @param number: amount of generated URLS
-    @return: list of generate random urls
-    """
-    url_list = []
-    while number:
-        url_list.append("/%s.%s" % (_generateSampleAlphaNumMetaChar(DEFAULT_LENGTH_URL),_generateSampleAlphaChars(DEFAULT_LENGTH_FT)))
-        number -= 1
-    return url_list
-
-def generateListOfHeaders (number):
-    """ 
-    @param number: amount of generated headers
-    @return: list of generate random headers
-    """
-    header_list = {}
-    while number:
-        header_list["H"+_generateSampleAlphaChars(DEFAULT_LENGTH_HEADER)]= _generateSampleAlphaChars(DEFAULT_LENGTH_HEADER)
-        number -= 1
-    return header_list
-
-def generateListOfParameters (number,predefined=False):
-    """ 
-    @param number: amount of generated parameters    
-    @return: list of generate random parameters
-    """
-    param_list = []
-    # while number:
-    #     if predefined:
-    #         param_list.append("%d_this_parameter_is_predefined" % (number))
-    #     else:
-    #         param_list.append("%s" % (_generateSampleAlphaChars(DEFAULT_LENGTH_PARAM)))
-    #     number -=1
-
-    for i in range (number):
-        if predefined:
-            param_list.append("%d_this_parameter_is_predefined" % (i))
-        else:
-            param_list.append("%s" % (_generateSampleAlphaChars(DEFAULT_LENGTH_PARAM)))
-    return param_list
-
-def generateListOfValues (number):
-    """ 
-    @param number: amount of generated parameters    
-    @return: list of generate random parameters
-    """
-    value_list = []
-    while number:
-        value_list.append("%s<script><xml>; drop</xml>document.createElement(alert())</script>" % (_generateSampleAlphaNumMetaChar(DEFAULT_LENGTH_VALUE)))
-        number -=1
-    return value_list
-
-def generateIPv4Address():
-    return "%s.%s.%s.%s" % (randint(1,255),randint(1,255),randint(1,255),randint(1,255))
-
-def mapParameterValue(listParam, listValue):
-    datadict = {}
-
-    if (len(listParam) == len(listValue)):
-        for i in range (0,len(listParam)):
-            datadict [listParam[i]] = listValue[i]
-    else: 
-        for param in listParam:
-            datadict [param] = listValue[randint(0,len(listValue)-1)]        
+    def updateCookies(self,headers=None):
+        if headers:
+            cookies_from_headers = parseCookie(headers)
+            self.cookies.update(cookies_from_headers)
+            
+    def setCookies(self, cookies = None):
+        if cookies:
+            self.cookies.update(cookies)
     
-    return datadict
-   
-def generateURLEncodedPayload (data, not_urlenc = False):
-    if isinstance(data,dict):
-        if not_urlenc:
-            qs =""
-            for key,value in data.items():
-                qs += "%s=%s&" % (key,value)
-            return qs[:len(qs)-1]
-
-        else:
-            return urlencode(data)
-    elif isinstance(data, str):
-        return data
-    else:
-        return ""
-
-def generateMultipartPayload (data):
-    """
-    Generate multipart body message
-    
-    """
-    
-    
-    multipartdata = [] 
-    boundary = _generateMultipartBoundary(70)
-    for name,value in data.items():
-        multipartdata.append("--%s" % boundary )
-        multipartdata.append ("Content-Disposition: form-data; name=\"%s\"" % name)
-        multipartdata.append ("")
-        multipartdata.append (value)
-    multipartdata.append("--%s--" % boundary)
-  
-    return  (DEFAULT_HTTP_DELIMETER.join(multipartdata),boundary)
-    
+    def getCookies(self):
+        return self.cookies
 
 
+        
+    def getCookieHeaderValue(self,cookies = None):
+        if cookies:
+            self.cookies.update(cookies)
+        return  "; ".join(["%s=%s" % (n,v) for (n,v) in self.cookies.items()])
+     
+    def getCookieHeader(self, cookies = None):
+        if cookies:
+            self.cookies.update(cookies)           
+        return  {"Cookie":"; ".join(["%s=%s" % (n,v) for (n,v) in self.cookies.items()])}
+
+
+    
 
 
 def generateRequestv2 (method, url, headers=None, payload=None, chunk_size=0,version="HTTP/1.1",post_type=POST_TYPE_URLENCODED):
@@ -600,15 +413,17 @@ def generateRequestv2 (method, url, headers=None, payload=None, chunk_size=0,ver
 
 
     for header,value in headers:
-        if "Cookie" not in header:
-            request_headers.append("%s: %s" %(header, value))
-        else:
-            cookie_header_value = ""
-            try:
-                for cookie_name, cookie_value in value.items():
-                    cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
-            except AttributeError:
-                request_headers.append ("%s: %s" %(header, value))
+        request_headers.append("%s: %s" %(header, value))
+        
+        # if "Cookie" not in header:
+        #     request_headers.append("%s: %s" %(header, value))
+        # else:
+        #     # cookie_header_value = ""
+        #     # try:
+        #     #     for cookie_name, cookie_value in value.items():
+        #     #         cookie_header_value += "%s=%s; " % (cookie_name, cookie_value)
+        #     # except AttributeError:
+        #         request_headers.append ("%s: %s" %(header, value))
             
 
         
@@ -967,42 +782,239 @@ def sendRequest(request_obj,host=None,use_ssl=False,sock=None,resp_format=None, 
     except KeyboardInterrupt:
         print ("request interrupted!")
 
-
-
-
-class HTTPCookies (object):
     
-    def __init__(self,headers=None,cookies = None):
-        if headers:
-            self.cookies = parseCookie(headers)
+
+
+def _generateSampleAlphaChars (length):
+    """
+        Generate random char string exact length
+        
+        
+        @param length: string length of random string
+        @return: random string 
+        
+    """
+    pop_us = "ABCDEFGHIJKLMNOPQURSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+    if length > len(pop_us):
+        pop= pop_us * (2*int((length/len(pop_us))))
+    else :
+        pop = pop_us
+    return "".join(sample(pop, length))
+
+def _generateSampleAlphaNumMetaChar (length):
+    """
+        Generate random alpha num meta char string exact length
+        
+        
+        @param length: string length of random string
+        @return: random string 
+        
+    """
+    pop_us = "ABCDEFGHIJKLMNOPQURSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(()_+=-<>,./?\`~|\}]{["
+    if length > len(pop_us):
+        pop= pop_us * (2*int((length/len(pop_us))))
+    else :
+        pop = pop_us
+    return "".join(sample(pop, length))
+
+def _generateMultipartBoundary (length):
+    """
+    Generate random boundary for multipart messages
+    """
+    
+    pop_us = "1234567890ABCDEFGHIJKLMNOPQURSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567890"
+    if length > len(pop_us):
+        pop= pop_us * (2*int((length/len(pop_us))))
+    else :
+        pop = pop_us
+    return "".join(sample(pop, length))
+    
+def _generateChunkBody(chunk_size,payload):
+    request_body=[]
+
+def parseCookie (responseHeaders):
+    """
+
+    """
+
+    cookie_pair_list = {}
+    try:
+        for header,value in responseHeaders:
+            if header == "Set-Cookie":
+                try :
+                    cookie = value[:value.index("; ")]
+                except ValueError:
+                    cookie = value
+                else:
+                    n,v = cookie.split("=")
+                    cookie_pair_list.update({n:v})
+            else:
+                continue
+    except ValueError:
+        for cheader in responseHeaders:
+            if cheader.lower().startswith("set-cookie"):
+                s = cheader.index(":")
+                try:
+                    e = cheader.index(";")
+                except ValueError:
+                    e = len(cheader)
+                cookie = cheader[s+1:e]
+                n,v = cookie.split("=")
+                cookie_pair_list.update({n.strip():v.strip()})
+    return cookie_pair_list
+
+def _isChunked (responseHeaders):
+    
+    transferencoding = False
+    
+    
+    try: 
+        for header,value in responseHeaders:
+            if header == "Transfer-Encoding" and value.lower() == "chunked":
+                transferencoding=True
+                break                
+            else:
+                continue
+    except ValueError:
+        for cheader in responseHeaders:
+            if cheader.lower().startswith("transfer-encoding"):
+                header,value = cheader.split(":")
+                if value.lower() == "chunked":
+                    transferencoding == True
+                    break
+                else:
+                    continue
+                
+    return transferencoding
+
+def generateListOfURLS (number, predefined=False,urlftk=0.1):
+    """ 
+    @param number: amount of generated URLS
+    @return: list of generate random urls
+    """
+    url_list = []
+    # while number:
+    #     if predefined:
+    #         url_list.append("/%d_this_is_predefined_url_with_possible_long_name.%dftype" % (number,number))
+    #     else:
+    #         url_list.append("/%s.%s" % (_generateSampleAlphaChars(DEFAULT_LENGTH_URL),_generateSampleAlphaChars(DEFAULT_LENGTH_FT)))
+    #     number -= 1
+
+    for i in range(1,number+1):
+        if predefined:
+            url_list.append("/%d_this_is_predefined_url_with_possible_long_name.%dftype" % (i,int(i*urlftk)))
         else:
-            self.cookies = {}
-        if cookies:
-            self.cookies.update(cookies)
+            url_list.append("/%s.%s" % (_generateSampleAlphaChars(DEFAULT_LENGTH_URL),_generateSampleAlphaChars(DEFAULT_LENGTH_FT)))
+             
 
-    def updateCookies(self,headers=None):
-        if headers:
-            cookies_from_headers = parseCookie(headers)
-            self.cookies.update(cookies_from_headers)
-            
-    def setCookies(self, cookies = None):
-        if cookies:
-            self.cookies.update(cookies)
-    def getCookies(self):
-        return self.cookies
-        
-    def getCookieHeaderValue(self,cookies = None):
-        if cookies:
-            self.cookies.update(cookies)
-        return  "; ".join(["%s=%s" % (n,v) for (n,v) in self.cookies.items()])
-     
-    def getCookieHeader(self, cookies = None):
-        if cookies:
-            self.cookies.update(cookies)           
-        return  {"Cookie":"; ".join(["%s=%s" % (n,v) for (n,v) in self.cookies.items()])}
+    return url_list
+
+def generateListOfURLSwMetaChars (number):
+    """ 
+    @param number: amount of generated URLS
+    @return: list of generate random urls
+    """
+    url_list = []
+    while number:
+        url_list.append("/%s.%s" % (_generateSampleAlphaNumMetaChar(DEFAULT_LENGTH_URL),_generateSampleAlphaChars(DEFAULT_LENGTH_FT)))
+        number -= 1
+    return url_list
+
+def generateListOfHeaders (number):
+    """ 
+    @param number: amount of generated headers
+    @return: list of generate random headers
+    """
+    header_list = {}
+    while number:
+        header_list["H"+_generateSampleAlphaChars(DEFAULT_LENGTH_HEADER)]= _generateSampleAlphaChars(DEFAULT_LENGTH_HEADER)
+        number -= 1
+    return header_list
+
+def generateListOfParameters (number,predefined=False):
+    """ 
+    @param number: amount of generated parameters    
+    @return: list of generate random parameters
+    """
+    param_list = []
+    # while number:
+    #     if predefined:
+    #         param_list.append("%d_this_parameter_is_predefined" % (number))
+    #     else:
+    #         param_list.append("%s" % (_generateSampleAlphaChars(DEFAULT_LENGTH_PARAM)))
+    #     number -=1
+
+    for i in range (number):
+        if predefined:
+            param_list.append("%d_this_parameter_is_predefined" % (i))
+        else:
+            param_list.append("%s" % (_generateSampleAlphaChars(DEFAULT_LENGTH_PARAM)))
+    return param_list
+
+def generateListOfValues (number):
+    """ 
+    @param number: amount of generated parameters    
+    @return: list of generate random parameters
+    """
+    value_list = []
+    while number:
+        value_list.append("%s<script><xml>; drop</xml>document.createElement(alert())</script>" % (_generateSampleAlphaNumMetaChar(DEFAULT_LENGTH_VALUE)))
+        number -=1
+    return value_list
+
+def generateIPv4Address():
+    return "%s.%s.%s.%s" % (randint(1,255),randint(1,255),randint(1,255),randint(1,255))
+
+def mapParameterValue(listParam, listValue):
+    datadict = {}
+
+    if (len(listParam) == len(listValue)):
+        for i in range (0,len(listParam)):
+            datadict [listParam[i]] = listValue[i]
+    else: 
+        for param in listParam:
+            datadict [param] = listValue[randint(0,len(listValue)-1)]        
+    
+    return datadict
+   
+def generateURLEncodedPayload (data, not_urlenc = False):
+    if isinstance(data,dict):
+        if not_urlenc:
+            qs =""
+            for key,value in data.items():
+                qs += "%s=%s&" % (key,value)
+            return qs[:len(qs)-1]
+
+        else:
+            return urlencode(data)
+    elif isinstance(data, str):
+        return data
+    else:
+        return ""
+
+def generateMultipartPayload (data):
+    """
+    Generate multipart body message
+    
+    """
+    
+    
+    multipartdata = [] 
+    boundary = _generateMultipartBoundary(70)
+    for name,value in data.items():
+        multipartdata.append("--%s" % boundary )
+        multipartdata.append ("Content-Disposition: form-data; name=\"%s\"" % name)
+        multipartdata.append ("")
+        multipartdata.append (value)
+    multipartdata.append("--%s--" % boundary)
+  
+    return  (DEFAULT_HTTP_DELIMETER.join(multipartdata),boundary)
+    
 
 
-        
+
+
+
 
         
 class HTTPSessionv2(object):
