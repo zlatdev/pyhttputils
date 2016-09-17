@@ -89,21 +89,95 @@ flow = [
         },
     },
 
+    {
+        "method":"get",
+        "url":"/login.php",
+        "payload":{
+            "test":"asdasdasd",
+        },
+    },
+    {
+        "method":"get",
+        "url":"/login.php",
+        "payload":{
+            "test":"asdf",
+        },
+    },
+
+    
+    {
+        "method":"get",
+        "url":"/login.php",
+        "payload":{
+            "test":"asdasdas",
+
+
+        },
+    },
+
+    {
+        "method":"post",
+        "url":"/post_message.php",
+        "payload":{
+            "post":"<script>alert();<script>",
+
+
+        },
+    },
+    {
+        "method":"post",
+        "url":"/post_message.php",
+        "payload":{
+            "post":"<script>document.getElementByID(\"qwe\")<script>",
+
+
+        },
+    },
+    {
+
+        "method":"post",
+        "url":"/post_message.php",        
+        "payload": {
+            "post":"""<script>alert()</script>""",
+            "xxe":"""<!DOCTYPE input [
+ <!ENTITY xxe SYSTEM "file:///C:/boot.ini" >
+]>
+<input></input>
+]""",
+        }
+    },  
 ]
+
 
 
 if __name__ == '__main__':
 
     session_parameters = [ 
     {
-        "num_of_pools":1,
+        "num_of_pools":2,
         "num_of_clients" : 2,
-        "host" : ("10.10.10.53",80),
-        "secure" : False,
-        "delay" : 1,
-        "repeat" : 3600,
+        "host" : ("cluster121.test.me",443),
+        "secure" : True,
+        "delay" : .2,
+        "repeat" : 243600,
         "flow" : flow,
-        "session_headers" : {"Host":"test53.me.localy"},
+        "session_headers" : {"Host":"cluster121.test.me"},
+        "prefix_url": "",
+        "session_http_version" : "HTTP/1.1",
+        "resp_format" : "status",
+        "debug" : False,
+        "xff": True,
+
+    },
+    {
+        "num_of_pools":2,
+        "num_of_clients" : 2,
+        "host" : ("cluster120.test.me",443),
+        "secure" : True,
+        "delay" : .1,
+        "repeat" : 243600,
+        "flow" : flow,
+        "session_headers" : {"Host":"cluster120.test.me"},
         "prefix_url": "",
         "session_http_version" : "HTTP/1.1",
         "resp_format" : "status",
@@ -114,12 +188,12 @@ if __name__ == '__main__':
     {
         "num_of_pools":1,
         "num_of_clients" : 2,
-        "host" : ("10.10.10.54",80),
+        "host" : ("cluster120.test.me",80),
         "secure" : False,
-        "delay" : 1,
-        "repeat" : 3600,
+        "delay" : .1,
+        "repeat" : 243600,
         "flow" : flow,
-        "session_headers" : {"Host":"test54.me.localy"},
+        "session_headers" : {"Host":"cluster120.test.me"},
         "prefix_url": "",
         "session_http_version" : "HTTP/1.1",
         "resp_format" : "status",
@@ -130,12 +204,12 @@ if __name__ == '__main__':
     {
         "num_of_pools":1,
         "num_of_clients" : 2,
-        "host" : ("172.29.70.53",80),
+        "host" : ("cluster121.test.me",80),
         "secure" : False,
         "delay" : 1,
-        "repeat" : 3600,
+        "repeat" : 360000,
         "flow" : flow,
-        "session_headers" : {"Host":"cl-test53.me.localy"},
+        "session_headers" : {"Host":"cluster121.test.me"},
         "prefix_url": "",
         "session_http_version" : "HTTP/1.1",
         "resp_format" : "status",
@@ -143,23 +217,7 @@ if __name__ == '__main__':
         "xff": True,
 
     },
-    #     {
-    #     "num_of_pools":1,
-    #     "num_of_clients" : 2,
-    #     "host" : ("172.29.70.54",8054),
-    #     "secure" : False,
-    #     "delay" : 1,
-    #     "repeat" : 3600,
-    #     "flow" : flow,
-    #     "session_headers" : {"Host":"cl-test54.me.localy"},
-    #     "prefix_url": "",
-    #     "session_http_version" : "HTTP/1.1",
-    #     "resp_format" : "status",
-    #     "debug" : False,
-    #     "xff": True,
-
-    # },
-    #     {
+    # #     {
     #     "num_of_pools":1,
     #     "num_of_clients" : 2,
     #     "host" : ("172.29.70.55",8055),
