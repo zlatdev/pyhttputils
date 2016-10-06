@@ -195,7 +195,7 @@ class HTTPResponse(object):
             try:
                 self.status = headers[0]
                 self.status_code = int (self.status[9:12])
-            except IndexError:
+            except (IndexError, ValueError):
                 self.status = None
                 self.status_code=None
             try:
@@ -490,6 +490,7 @@ def sendRequest(request_obj,host=None,use_ssl=False,sock=None,resp_format=None, 
                 sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
             
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
             #sock.settimeout(60)
 
             if use_ssl:
@@ -1231,6 +1232,7 @@ class HTTPSessionv2(object):
         if request and isinstance(request,HTTPRequestv2):
             self.session.append(request)        
         elif request and isinstance(request,dict):
+
             self.session.append(HTTPRequestv2(**request))
         else:
             raise Exception("Invalid request object")
@@ -1265,6 +1267,7 @@ class HTTPSessionv2(object):
        
 
         for self.request in self.session:
+            
             for i in range (0, self.request.repeat):
                 # save original headers and cookies
                 req_cookie = self.request.cookies.getCookies().copy()
