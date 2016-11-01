@@ -60,6 +60,9 @@ RESPONSE_BODY = 3
 
 
 
+
+
+
 class HTTPRequestv2(object):
     """
         Class for HTTP request which will be send
@@ -171,11 +174,6 @@ class HTTPRequestv2(object):
 
 
 
-    
-
-
-
-
 class HTTPResponse(object):
     """
         Class for http response
@@ -213,9 +211,6 @@ class HTTPResponse(object):
         self.payload = payload
 
 
-
-
-
 class HTTPCookies (object):
     
     def __init__(self,headers=None,cookies = None):
@@ -251,7 +246,71 @@ class HTTPCookies (object):
         return  {"Cookie":"; ".join(["%s=%s" % (n,v) for (n,v) in self.cookies.items()])}
 
 
-    
+class HTTPRequest(object):
+    pass
+
+class TCPChannel(object):
+    def __init__(self, host = None, data=None, secure=False, use_ipv6=False):
+        
+        self.session = False
+        self.__sock = None
+
+        self.send_data = data
+        self.recieved_data = None
+        self.ipv6 = use_ipv6
+        self.secure = secure
+
+        if not host :
+            raise Exception("No host")
+        else:
+            self.host = host
+
+
+
+    def _connect(self):
+        if self.ipv6:
+                sock = socket.socket(socket.AF_INET6,socket.SOCK_STREAM)
+            else:
+                sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+            
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            #sock.settimeout(60)
+
+            if self.secure:
+                # print ("05")
+
+                try:
+                    security_context=ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+                    self.session = security_context.wrap_socket(sock)
+                 
+
+                except ssl.SSLError as e:
+                    if self.session:
+                        self.session.shutdown(socket.SHUT_RDWR)
+                        self.session.close()  
+                        sel.session = None
+                        
+                    self.recieved_data = ( e.errno,e.strerror)
+
+                
+            else:
+                # print ("06")
+                self.session = sock
+
+            #del sock
+            # print ("07")
+            try:
+                self.session.connect(self.host)
+            except OSError as e:
+                self.recieved_data = ( e.errno,e.strerror) 
+
+
+
+
+
+
+
 
 
 def generateRequestv2 (method, url, headers=None, payload=None, chunk_size=0,version="HTTP/1.1",post_type=POST_TYPE_URLENCODED):
@@ -1016,12 +1075,6 @@ def generateMultipartPayload (data):
     return  (DEFAULT_HTTP_DELIMETER.join(multipartdata),boundary)
     
 
-
-
-
-
-
-        
 class HTTPSessionv2(object):
     '''
     Class for genrating HTTP session. have method to send on request, create http flow from several requests and send on by one
