@@ -114,8 +114,6 @@ class HTTPRequestv2(object):
         for header,value in headers.items():
             self.headers.append((header,value))
 
-
-
     def generateRequest(self):
         """
         Generate request for single use
@@ -170,6 +168,12 @@ class HTTPRequestv2(object):
 
         
         return sendRequest(self.generateRequest(), host, use_ssl, sock, self.resp_format, use_ipv6)
+
+
+
+    
+
+
 
 
 class HTTPResponse(object):
@@ -1236,7 +1240,6 @@ class HTTPSessionv2(object):
             self.session.append(HTTPRequestv2(**request))
         else:
             raise Exception("Invalid request object")
-
 
     def runSessionv2(self, host = None, secure=False, delay=0, session_headers = None, prefix_url=None, resp_format=None, version=None, *args, **kwargs):
         '''
