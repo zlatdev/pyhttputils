@@ -67,7 +67,7 @@ class HTTPRequestv2(object):
     """
         Class for HTTP request which will be send
     """
-    __slots__ = ("method", "url", "headers","cookies","payload","chunk_size","version","enctype","repeat","resp_format")
+    __slots__ = ("method", "url", "headers","cookies","payload","chunk_size","version","enctype","repeat","resp_format","request")
 
     def __init__ (self,method="GET", url="/", headers=None, payload=None, chunk_size=0, version="HTTP/1.1", enctype=POST_TYPE_URLENCODED, repeat=1, resp_format=None):
         """
@@ -106,14 +106,17 @@ class HTTPRequestv2(object):
         self.enctype = enctype
         self.repeat=repeat
         self.resp_format = resp_format
+        
+        self.request = None
 
     def updateRequestHeaders(self, headers={}) :
         if not headers:
             return
 
         if "Cookie" in headers:
-            self.cookies.setCookies(headers["Cookie"])
+            self.cookies.setCookies(cookies = headers["Cookie"])
             del headers["Cookie"]
+
         for header,value in headers.items():
             self.headers.append((header,value))
 
@@ -126,23 +129,27 @@ class HTTPRequestv2(object):
         if self.cookies.cookies:
             self.headers.append(("Cookie",self.cookies.getCookieHeaderValue()))
         
-        return generateRequestv2(self.method, self.url, self.headers, self.payload, self.chunk_size, self.version, self.enctype)
+        self.request = generateRequestv2(self.method, self.url, self.headers, self.payload, self.chunk_size, self.version, self.enctype)
+
     
     def generateRawRequest(self):
-
-        request = self.generateRequest()
-
-        request_h = DEFAULT_HTTP_DELIMETER.join(request[0])
+        
+       
+        
+        if not self.request:
+            self.generateRequest()
+        
+        request_h = DEFAULT_HTTP_DELIMETER.join(self.request[0])
         # print (request_h)
 
-        if request[1]:
+        if self.request[1]:
 
             body_payload = ""
-            if len(request[1]) >1:
+            if len(self.request[1]) >1:
                 for chunk in request[1]:
                     body_payload += DEFAULT_HTTP_DELIMETER.join(chunk)
             else:
-                body_payload = request[1][0]
+                body_payload = self.request[1][0]
 
             return request_h.encode() + body_payload.encode()
         else:
@@ -168,9 +175,11 @@ class HTTPRequestv2(object):
         """
         if resp_format:
             self.resp_format = resp_format
-
         
-        return sendRequest(self.generateRequest(), host, use_ssl, sock, self.resp_format, use_ipv6)
+        if not self.request:
+            self.generateRequest()
+        
+        return sendRequest(self.request, host, use_ssl, sock, self.resp_format, use_ipv6)
 
 
 
@@ -269,41 +278,41 @@ class TCPChannel(object):
 
     def _connect(self):
         if self.ipv6:
-                sock = socket.socket(socket.AF_INET6,socket.SOCK_STREAM)
-            else:
-                sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-            
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-            #sock.settimeout(60)
+            sock = socket.socket(socket.AF_INET6,socket.SOCK_STREAM)
+        else:
+            sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        #sock.settimeout(60)
 
-            if self.secure:
-                # print ("05")
+        if self.secure:
+            # print ("05")
 
-                try:
-                    security_context=ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-                    self.session = security_context.wrap_socket(sock)
-                 
-
-                except ssl.SSLError as e:
-                    if self.session:
-                        self.session.shutdown(socket.SHUT_RDWR)
-                        self.session.close()  
-                        sel.session = None
-                        
-                    self.recieved_data = ( e.errno,e.strerror)
-
-                
-            else:
-                # print ("06")
-                self.session = sock
-
-            #del sock
-            # print ("07")
             try:
-                self.session.connect(self.host)
-            except OSError as e:
-                self.recieved_data = ( e.errno,e.strerror) 
+                security_context=ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+                self.session = security_context.wrap_socket(sock)
+             
+
+            except ssl.SSLError as e:
+                if self.session:
+                    self.session.shutdown(socket.SHUT_RDWR)
+                    self.session.close()  
+                    sel.session = None
+                    
+                self.recieved_data = ( e.errno,e.strerror)
+
+            
+        else:
+            # print ("06")
+            self.session = sock
+
+        #del sock
+        # print ("07")
+        try:
+            self.session.connect(self.host)
+        except OSError as e:
+            self.recieved_data = ( e.errno,e.strerror) 
 
 
 
@@ -422,7 +431,6 @@ def generateRequestv2 (method, url, headers=None, payload=None, chunk_size=0,ver
             request_body = []
     
             request_headers.append("Content-Length: 0")
-           
     
     elif (method.lower().strip() == "patch"):
         
@@ -476,6 +484,7 @@ def generateRequestv2 (method, url, headers=None, payload=None, chunk_size=0,ver
 
 
     for header,value in headers:
+        # print (header,value)
         request_headers.append("%s: %s" %(header, value))
         
         # if "Cookie" not in header:
@@ -1623,6 +1632,7 @@ class HTTPClient(threading.Thread):
         return
 
 class HTTPClientsPool(multiprocessing.Process):
+    
     def __init__(self, num_of_clients=1, host=None, secure = False, delay=0, repeat=10, flow=None, session_headers = None, prefix_url="", session_http_version="", xff = True, resp_format=None, debug=False,*args, **kwargs):
         multiprocessing.Process.__init__(self)
         self.num_of_clients = num_of_clients
