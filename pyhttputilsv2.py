@@ -98,8 +98,7 @@ class HTTPRequestv2(object):
         self.cookies = HTTPCookies()
 
         if headers: 
-            self.updateRequestHeaders(headers)
-
+            self.updateRequestHeaders(headers)       
         self.payload = payload
         self.chunk_size = chunk_size
         self.version = version
@@ -181,7 +180,123 @@ class HTTPRequestv2(object):
         
         return sendRequest(self.request, host, use_ssl, sock, self.resp_format, use_ipv6)
 
+class HTTPRequestv3(object):
+    """
+        Class for HTTP request which will be send
+    """
+    __slots__ = ("method", "url", "headers","cookies","params","payload","chunk_size","version","enctype","repeat","resp_format","request")
 
+    def __init__ (self,method="GET", url="/", headers=None, cookies = None, params=None, payload=None, chunk_size=0, version="HTTP/1.1", enctype=POST_TYPE_URLENCODED, repeat=1, resp_format=None):
+        """
+        Constructor for HTTP request.
+        
+        @param method:request method
+        @type method:str
+        @param url:requested url
+        @type url:str
+        @param headers:request headers
+        @type headers:dict
+        @param payload:request payload, could be dict or string.
+        @type payload:mixed
+        @param chunk_size:size of chunk which is used to send payload
+        @type chunk_size:int
+        @param version:HTTP protocol version
+        @type version:str
+        @param enctype:type of payload encoding : 0- urlencoded, 1-multipart, 2 - raw.
+        @type enctype:int
+        @param repeat:number of time to send request
+        @type repeat:int
+        @param resp_format:format of response to represent for user: all|body|headers|status
+        @type resp_format:str
+        """
+        self.method = method
+        self.url = url
+        self.headers = []
+        self.cookies = HTTPCookies(cookies = cookies)
+
+        if headers: 
+            self.updateRequestHeaders(headers)
+        self.params = params
+        self.payload = payload
+        self.chunk_size = chunk_size
+        self.version = version
+        self.enctype = enctype
+        self.repeat=repeat
+        self.resp_format = resp_format
+        
+        self.request = None
+
+
+
+    def updateRequestHeaders(self, headers={}) :
+        if not headers:
+            return
+
+        if "Cookie" in headers:
+            self.cookies.updateCookies(cookies = headers["Cookie"])
+            del headers["Cookie"]
+
+        for header,value in headers.items():
+            self.headers.append((header,value))
+
+    def generateRequest(self):
+        """
+        Generate request for single use
+        """
+        
+
+             
+        self.request = generateRequestv3(self.method, self.url, self.headers, self.cookies, self.params, self.payload, self.chunk_size, self.version, self.enctype)
+
+    
+    def generateRawRequest(self):
+        
+       
+        
+        if not self.request:
+            self.generateRequest()
+        
+        request_h = DEFAULT_HTTP_DELIMETER.join(self.request[0])
+        # print (request_h)
+
+        if self.request[1]:
+
+            body_payload = ""
+            if len(self.request[1]) >1:
+                for chunk in self.request[1]:
+                    body_payload += DEFAULT_HTTP_DELIMETER.join(chunk)
+            else:
+                body_payload = self.request[1][0]
+
+            return request_h.encode() + body_payload.encode()
+        else:
+            return request_h.encode() + b""
+        
+    def generateSessionRequest(self):
+        """
+        Generate request to use in in session
+        """
+        
+        return (self, self.repeat, self.resp_format)
+
+    def getResponse(self,host=None,use_ssl=False,sock=None,use_ipv6=False,resp_format = None):
+        """
+        Send request and get response and return response object
+        
+        @param host: tuple of host ("ip",port)
+        @type host:tuple
+        @param use_ssl:use ssl connection or not
+        @type use_ssl:boolen
+        @param sock:socket object if already was opened
+        @type sock:socket
+        """
+        if resp_format:
+            self.resp_format = resp_format
+        
+        if not self.request:
+            self.generateRequest()
+        
+        return sendRequest(self.request, host, use_ssl, sock, self.resp_format, use_ipv6)
 
 class HTTPResponse(object):
     """
@@ -219,7 +334,6 @@ class HTTPResponse(object):
         self.sock = sock
         self.payload = payload
 
-
 class HTTPCookies (object):
     
     def __init__(self,headers=None,cookies = None):
@@ -229,6 +343,8 @@ class HTTPCookies (object):
             self.cookies = {}
         if cookies:
             self.cookies.update(cookies)
+    def __str__ (self):
+        return self.getCookieHeaderValue()
 
     def updateCookies(self,headers=None):
         if headers:
@@ -253,7 +369,6 @@ class HTTPCookies (object):
         if cookies:
             self.cookies.update(cookies)           
         return  {"Cookie":"; ".join(["%s=%s" % (n,v) for (n,v) in self.cookies.items()])}
-
 
 class HTTPRequest(object):
     pass
@@ -313,14 +428,6 @@ class TCPChannel(object):
             self.session.connect(self.host)
         except OSError as e:
             self.recieved_data = ( e.errno,e.strerror) 
-
-
-
-
-
-
-
-
 
 def generateRequestv2 (method, url, headers=None, payload=None, chunk_size=0,version="HTTP/1.1",post_type=POST_TYPE_URLENCODED):
     """
@@ -507,6 +614,175 @@ def generateRequestv2 (method, url, headers=None, payload=None, chunk_size=0,ver
 
     return (request_headers, request_body)
 
+def generateRequestv3 (method, url, headers=None, cookies = None, params = None, payload=None, chunk_size=0,version="HTTP/1.1",post_type=POST_TYPE_URLENCODED):
+    """
+    Function generate request from parameters
+
+    @param method: request method
+    @type method: string
+    @param url: requested url
+    @type url: string
+    @param headers: list of tuple (header_name, header_value)
+    @type headers: list
+    @param payload: data which send with 
+    @type payload: any
+    @param chunk_size: chunk size for Chunked requests. if 0, request is not chunked
+    @type chunk_size: integer
+    @param version: http version
+    @type version: string
+    @param post_type: encoding for data: 0 - urlencoding for GET and POST requests, 1 - multipart, 2 - raw data as is 
+    @type post_type: integer
+    
+     
+    """
+
+    request_headers = []
+    request_body = []
+    request_str = "%s %s %s"
+
+    if headers == None:
+        headers = {}
+    
+    if params:
+        if isinstance(params,dict) and "RANDOM_VALUE" in params :
+            name_tmp = params ["RANDOM_VALUE"]
+            del  params ["RANDOM_VALUE"]
+            params.update({name_tmp:uuid4()})    
+    
+    if payload:
+        if isinstance(payload,dict) and "RANDOM_VALUE" in payload :
+            name_tmp = payload ["RANDOM_VALUE"]
+            del  payload ["RANDOM_VALUE"]
+            payload.update({name_tmp:uuid4()}) 
+    
+    if payload:
+        if post_type == POST_TYPE_URLENCODED:
+            ready_payload = (generateURLEncodedPayload(payload),)
+        elif post_type == POST_TYPE_MULTIPART:               
+            ready_payload = generateMultipartPayload(payload)
+        elif post_type == POST_TYPE_RAW:
+            ready_payload = (str(payload),)
+        else:
+            ready_payload = (generateURLEncodedPayload(payload,not_urlenc = True ),)
+    else:
+        ready_payload = None
+
+
+
+    if params:
+        request_headers.append(request_str % (method.upper(), url+"?"+ generateURLEncodedPayload(params), version))
+    else:
+        request_headers.append(request_str % (method.upper(), url, version))  
+    
+    if (method.lower().strip() == "get"):        
+        request_body=[]
+        
+    elif (method.lower().strip() == "post"):
+        
+        if ready_payload:
+            
+            if post_type == POST_TYPE_URLENCODED:
+            
+                request_headers.append("Content-Type: application/x-www-form-urlencoded")                
+
+                if chunk_size>0:
+                    request_headers.append("Transfer-Encoding: chunked")    
+                    request_body = _generateChunkBody(chunk_size,ready_payload[0])
+                
+                else:                
+                    request_body = []
+                    request_headers.append("Content-Length: %d" % len(ready_payload[0]))
+                 
+
+                    request_body.append(ready_payload[0])
+            
+            elif post_type == POST_TYPE_MULTIPART:
+               
+                multipart_payload = generateMultipartPayload(payload)
+                request_headers.append("Content-Type: multipart/form-data; boundary=%s" % ready_payload[1])
+                
+                if (chunk_size>0):
+                    request_body = _generateChunkBody(chunk_size,multipart_payload[0])
+                    request_headers.append("Transfer-Encoding: chunked")
+                else:
+                    request_body=[]
+                    request_headers.append("Content-Length: %d" % len(multipart_payload[0]))
+                    
+                    request_body.append(multipart_payload[0])
+                
+            
+            elif post_type == POST_TYPE_RAW:
+
+                if chunk_size > 0:
+
+                    request_headers.append("Transfer-Encoding: chunked")
+                    request_body = _generateChunkBody(chunk_size,ready_payload[0])
+                   
+                else:
+                    request_body = []
+                    request_headers.append("Content-Length: %d" % len(str(ready_payload[0])))
+                    request_body.append(ready_payload[0])
+                
+            
+        else:
+            request_body = []
+    
+            request_headers.append("Content-Length: 0")
+    
+    elif (method.lower().strip() == "patch"):
+        
+        if ready_payload:
+
+                if chunk_size > 0:
+
+                    request_headers.append("Transfer-Encoding: chunked")
+                    request_body = _generateChunkBody(chunk_size,payload)
+                   
+                else:
+                    request_body = []
+                    request_headers.append("Content-Length: %d" % len(str(payload)))
+                    request_body.append(ready_payload[0])
+
+        
+
+            
+        else:
+            request_body = []
+            #request.append("Content-Type : application/x-www-form-urlencoded")
+            request_headers.append("Content-Length: 0")
+            
+   
+            
+    else:
+        if payload:
+            request_headers.append(request_str % (method.upper(), url, version))
+            request_headers.append("Content-Length: %d" % len(str(payload)))
+            request_body = str(payload)
+        else:
+            request_headers.append(request_str % (method.upper(), url, version))
+            request_body = ""        
+             
+
+
+    for header,value in headers:
+        # print (header,value)
+        request_headers.append("%s: %s" % (header, value))
+    
+
+    if cookies :    
+        request_headers.append("%s: %s" % ("Cookie",str(cookies)))
+        
+            
+
+        
+            
+    request_headers.append("") 
+    request_headers.append("")       
+       
+   
+
+    return (request_headers, request_body)
+
 def sendRequest(request_obj,host=None,use_ssl=False,sock=None,resp_format=None, use_ipv6=False, raw_request=None,is_chunked = False):
     """
     Send request passed in first parameter as tuple of HTTPSession headers(list) and request body(str) 
@@ -545,6 +821,8 @@ def sendRequest(request_obj,host=None,use_ssl=False,sock=None,resp_format=None, 
         request = generateRequestv2(**request_obj)
     elif isinstance(request_obj, HTTPRequestv2):
         request = request_obj.generateRequestv2()
+    elif isinstance(request_obj, HTTPRequestv3):
+        request = request_obj.generateRequestv3()
     else:
         request = request_obj
     # print ("02")
@@ -1158,17 +1436,15 @@ class HTTPSessionv2(object):
             self.host = host 
         else:
             self.host = None
-        
         if secure:
             self.secure = True
         else:
             self.secure = False
         if session_headers:
+            if "Cookie" in session_headers:
+                self.session_cookies.setCookies(session_headers["Cookie"])
+                del session_headers["Cookie"]
             self.session_headers = session_headers
-            if "Cookie" in self.session_headers:
-                self.session_cookies.setCookies(self.session_headers["Cookie"])
-                del self.session_headers["Cookie"]
-
         else:
             self.session_headers = {}
         
@@ -1217,14 +1493,8 @@ class HTTPSessionv2(object):
         @param session_http_version:
         @type session_http_version:
         '''
-        
-        
-        
-        
-        
-
+     
         for request in session_flow:      
-
 
             try:
                 method = request["method"]
@@ -1357,6 +1627,532 @@ class HTTPSessionv2(object):
                 if prefix_url:
                     url = self.request.url
                     self.request.url = str(prefix_url) + self.request.url
+
+                if resp_format:
+                    old_resp_format = self.request.resp_format                    
+                    self.request.resp_format=resp_format
+                    # print (resp_format, old_resp_format, self.resp_format, self.request.resp_format)
+                if version:
+                    old_version = self.request.version
+                    self.request.version=version
+                    
+               
+                # print (1)
+                if self.sock:
+                    self.response = self.request.getResponse(sock=self.sock)
+                else:
+                    self.response = self.request.getResponse(host=self.host, use_ssl=self.secure, use_ipv6 = self.ipv6)
+                # print (1)                    
+
+                if self.response.sock:
+                    self.sock = self.response.sock
+                else:
+                    self.sock = None
+                #update cookie from response headers
+                self.session_cookies.updateCookies(self.response.headers)
+                
+                if self.debug:
+                    print (self.request.generateRawRequest())
+                    # if self.session_cookies.cookies:
+                    #     for cookie in 
+                    #     print (self.request.headers["Cookie"])
+
+                print_resp = self.request.resp_format.lower()
+                if "status" in print_resp:
+                    print (self.response.status)
+                if "headers" in print_resp:
+                    print (self.response.headers)
+                if "body" in print_resp:
+                    print (self.response.payload)
+                if "all" in print_resp:
+                    print (self.response.status)
+                    print (self.response.headers)
+                    print (self.response.payload)
+                
+                self.request.headers = req_headers
+                self.request.cookies = HTTPCookies(cookies = req_cookie)
+                
+                # self.request.headers["Cookie"] = req_cookie
+                
+                if prefix_url:
+                    self.request.url = url
+                if resp_format:
+                    self.request.resp_format = old_resp_format
+                if version:
+                    self.request.version = old_version
+                self.response = None                
+                time.sleep(delay)
+            self.request = None
+            
+        
+
+        self.closeSession()
+
+    def runAllInOneSession (self, host = None, secure=False, delay=0, session_headers = None, prefix_url=None, resp_format=None, version=None, *args, **kwargs):
+        '''
+        Run All requests in one session. Send each request from self.session list. Session cookies are not removed between session 
+        
+        @param delay:delay in seconds between requests
+        @type delay:float
+        @type self.request:HTTPRequest
+        '''
+        if host:
+            self.host = host
+        if secure:
+            self.secure = True
+        
+        try:
+            if kwargs["use_ipv6"] == True:
+                self.ipv6 = True
+            else:
+                self.ipv6 = False
+        except KeyError:
+                self.ipv6 = False
+
+
+        if not session_headers:
+            session_headers = {}
+       
+
+        for self.request in self.session:
+            for i in range (0, self.request.repeat):
+                # save old headers and cookies
+
+                if self.request.headers:
+                    req_headers = self.request.headers.copy()
+                    if "Cookie" in self.request.headers:
+                        req_cookie = self.request.headers["Cookie"].copy()                    
+                        req_headers["Cookie"] = req_cookie
+                else:
+                    req_headers = { }
+                
+                # update request headers cookie according new session headers
+                
+                if self.session_cookies.cookies and "Cookie" in session_headers:
+                   self.session_cookies.cookies.update(session_headers.pop("Cookie"))
+                   self.request.headers.update(session_headers)
+                else:
+                    self.request.headers.update(session_headers)
+
+                #update cookie which was recieved from response
+
+                if self.session_cookies.cookies:
+                    if "Cookie" in self.request.headers:
+                        self.request.headers["Cookie"].update(self.session_cookies.cookies)
+                    else:                        
+                        self.request.headers.update({"Cookie":self.session_cookies.cookies})
+                
+                if prefix_url:
+                    url = self.request.url
+                    self.request.url = str(prefix_url) + self.request.url
+
+                if resp_format:
+
+                    old_resp_format = self.request.resp_format                    
+                    self.request.resp_format=resp_format
+                    # print (resp_format, old_resp_format, self.resp_format, self.request.resp_format)
+                if version:
+                    old_version = self.request.version
+                    self.request.version=version
+                    
+                if self.debug:
+                    print (self.request.generateRawRequest())
+                    # if self.session_cookies.cookies:
+                    #     for cookie in 
+                    #     print (self.request.headers["Cookie"])
+                # print (1)
+                if self.sock:
+                    self.response = self.request.getResponse(sock=self.sock)
+                else:
+                    self.response = self.request.getResponse(host=self.host, use_ssl=self.secure, use_ipv6 = self.ipv6)
+                # print (1)                    
+
+                if self.response.sock:
+                    self.sock = self.response.sock
+                else:
+                    self.sock = None
+                
+                self.session_cookies.updateCookies(self.response.headers)
+                
+
+                print_resp = self.request.resp_format.lower()
+                if "status" in print_resp:
+                    print (self.response.status)
+                if "headers" in print_resp:
+                    print (self.response.headers)
+                if "body" in print_resp:
+                    print (self.response.payload)
+                if "all" in print_resp:
+                    print (self.response.status)
+                    print (self.response.headers)
+                    print (self.response.payload)
+                
+                self.request.headers = req_headers
+                # self.request.headers["Cookie"] = req_cookie
+                
+                if prefix_url:
+                    self.request.url = url
+                if resp_format:
+                    self.request.resp_format = old_resp_format
+                if version:
+                    self.request.version = old_version
+                self.response = None                
+                time.sleep(delay)
+            self.request = None
+            
+        
+
+        self.closeSession(one_session=True) 
+
+    def closeSession(self,session_flow = False,one_session = False):
+        """
+        Close socket connections
+        """
+        # print (2)
+
+
+        if session_flow:
+            self.session = []
+        if self.sock:            
+            self.sock.shutdown(socket.SHUT_RDWR)
+            self.sock.close()
+            self.sock=None
+            self.secure=False
+        else:
+            self.sock=None
+            self.secure=False
+        
+        self.request=None
+        self.response=None      
+        if not one_session:  
+            self.session_cookies=HTTPCookies()
+
+    
+
+    def getHTTPSessionRawRequests (self,filename=None,session_headers=None):
+        if not filename:
+            return 1
+        else:
+            f = open(filename,"w")
+            for req in self.session:
+                if req.headers:
+                    req_headers = req.headers.copy()
+                    if "Cookie" in req.headers:
+                        req_cookie = req.headers["Cookie"].copy()                    
+                        req_headers["Cookie"] = req_cookie
+                else:
+                    req_headers = {}
+                    
+                if session_headers:
+                    req.headers.update(session_headers)                
+                f.write(req.generateRawRequest())
+                f.write("\r\n")
+                req.headers = req_headers
+            f.close()
+
+
+class HTTPSessionv3(object):
+    '''
+    Class for genrating HTTP session. have method to send on request, create http flow from several requests and send on by one
+    
+    '''
+    __slots__ = ("debug","request","session_cookies","sock","response","session","host","secure","session_headers","session_cookies","prefix_url","resp_format","session_http_version","ipv6","delay")
+
+    def __init__(self, host=None, secure = False, request=None, flow=None, session_headers = None, session_cookies = None,  prefix_url="", session_http_version="", resp_format=None, *args, **kwargs):
+        '''
+        
+        @param host:used for configuring remote host ("host",port)
+        @type host:tuple
+        @param secure:is ssl connection used or not
+        @type secure:boolen
+        @param request: instance of HTTPRequest class
+        @type request:HTTPRequest
+        @param flow: list of dict, describing the request
+        @type flow: list
+        @param session_headers:
+        @type session_headers: dict
+        @param prefix_url:
+        @type prefix_url: string
+        @param session_http_version:
+        @type session_headers: string
+        '''
+        
+        try:
+            if kwargs["delay"]: 
+                self.delay = kwargs["delay"]
+            else:
+                self.delay = False
+            
+        except KeyError:
+            self.delay = False
+       
+
+        try:
+            if kwargs["debug"] == True:
+                self.debug = True
+            else:
+                self.debug = False
+            
+        except KeyError:
+            self.debug = False
+        
+        
+        try:
+            if kwargs["use_ipv6"] == True:
+                self.ipv6 = True
+            else:
+                self.ipv6 = False
+        except KeyError:
+                self.ipv6 = False
+
+
+
+        
+        self.sock = None
+        self.response=None
+        
+        self.session_cookies = HTTPCookies(cookies = session_cookies)
+        self.session_headers = []
+        
+        self.session = []       
+        
+        if request and isinstance(request, HTTPRequestv3):
+            self.addSessionRequestv3(request)
+            self.request=None
+        else:
+            self.request = None
+        if host:
+            self.host = host 
+        else:
+            self.host = None
+        if secure:
+            self.secure = True
+        else:
+            self.secure = False
+        if session_headers:
+            if "Cookie" in session_headers:
+                self.session_cookies.setCookies(session_headers["Cookie"])
+                del session_headers["Cookie"]
+            self.session_headers = session_headers
+        else:
+            self.session_headers = {}
+        
+        if prefix_url:
+            self.prefix_url = prefix_url
+        else:
+            self.prefix_url = ""
+        
+        if session_http_version:
+            self.session_http_version = session_http_version
+        else:
+            self.session_http_version = None
+        
+        if resp_format:
+            self.resp_format = resp_format
+        else:
+            self.resp_format = "None"
+
+        if flow:            
+            self.parseSessionv2(session_flow=flow)
+        
+    
+    def parseSessionv2 (self,session_flow = None, *args, **kwargs):
+        '''
+        Parse http session and generate requests for next usage. Format of request :
+        @TODO fix work with cookies as dict
+        
+        {
+         "url":URL to send, 
+         "method":Method to use GET|POST|HEAD
+         "headers": dict of headers {"Header":"Value"}.
+         "payload": payload to send could be dict {"param":"value} or raw text.
+         "enctype": how enctype the payload 0 - urlencoded, 1-multipart, 2-as is,
+         "repeat":how many times repeat request,
+         "chunk_size":size of chunk, if send request payload chunked.
+         "resp_format": all|body|headers|status
+        }
+
+        
+        @param session:list of requests formated in special way. see examples
+        @type session:list
+        @param session_headers:dict of headers HeaderName:Header value, which will be assigned to each request in session
+        @type session_headers:dict
+        @param prefix_url:prefix what will be added to each url in session 
+        @type prefix_url:str
+        @param session_http_version:
+        @type session_http_version:
+        '''
+     
+        # for request in session_flow:      
+
+        #     try:
+        #         method = request["method"]
+        #     except KeyError:
+        #         method = "GET"
+          
+        #     try:
+        #         url = request["url"]
+        #         if self.prefix_url:
+        #             url = self.prefix_url+url
+        #     except KeyError:
+        #         url="/"
+            
+        #     try:
+        #         # print (request["headers"])
+        #         url_headers = request["headers"]
+        #         # print (url_headers)
+        #         url_headers.update(self.session_headers)
+        #         if self.session_cookies.getCookies() and "Cookie" in url_headers:
+        #             url_headers["Cookie"].update(self.session_cookies.getCookies())
+        #         else:
+        #             if self.session_cookies.cookies:
+        #                 url_headers["Cookie"] = self.session_cookies.getCookies()
+        #     except KeyError:
+        #         url_headers = {}
+        #         url_headers.update(self.session_headers)            
+        #         if self.session_cookies.cookies:
+        #             url_headers["Cookie"] = self.session_cookies.getCookies()
+            
+
+
+
+        #     try:
+        #         url_payload = request["payload"]
+        #     except KeyError:
+        #         url_payload = None
+            
+        #     try:
+        #         enctype = int(request["enctype"])
+                
+        #     except KeyError:
+        #         enctype = 0    
+            
+        #     try:
+        #         repeat = request["repeat"]
+        #     except KeyError:
+        #         repeat = 1
+                
+        #     try:
+        #         chunk_size = request["chunk_size"]
+        #     except KeyError:
+        #         chunk_size = 0
+            
+        #     try:
+        #         if not self.resp_format:
+        #             self.resp_format = request["resp_format"]
+        #     except KeyError:
+        #         self.resp_format = "None"
+
+        #     try:
+        #         http_version = request["version"]
+        #     except KeyError:
+        #         if self.session_http_version:
+        #             http_version = self.session_http_version
+        #         else:
+        #             http_version = "HTTP/1.1"
+            
+
+        #     self.addSessionRequestv2(HTTPRequestv2(method, url, url_headers, url_payload, chunk_size, http_version, enctype, repeat, self.resp_format))
+        
+
+        for request in session_flow:
+            self.addSessionRequestv3(HTTPRequestv3(**request)) 
+
+
+
+
+
+
+
+    def addSessionRequestv3 (self,request=None):
+
+        if request and isinstance(request,HTTPRequestv3):
+            self.session.append(request)        
+        elif request and isinstance(request,dict):
+            self.session.append(HTTPRequestv3(**request))
+        else:
+            raise Exception("Invalid request object")
+
+    def runSessionv3(self, host = None, secure=False, delay=0, session_headers = None, session_cookies = None, prefix_url="", resp_format="None", version=None, *args, **kwargs):
+        '''
+        Run session. Send each request from self.session list.
+        
+        @param delay:delay in seconds between requests
+        @type delay:float
+        @type self.request:HTTPRequest
+        '''
+        if host:
+            self.host = host
+        if secure:
+            self.secure = True
+        if self.delay:
+            delay = self.delay
+      
+        try:
+            if kwargs["use_ipv6"] == True:
+                self.ipv6 = True
+            else:
+                self.ipv6 = False
+        except KeyError:
+                self.ipv6 = False
+
+        try:
+            if kwargs["delay"]: 
+                self.delay = kwargs["delay"]
+            else:
+                self.delay = False
+            
+        except KeyError:
+            self.delay = False
+       
+
+        try:
+            if kwargs["debug"] == True:
+                self.debug = True
+            else:
+                self.debug = False
+            
+        except KeyError:
+            self.debug = False
+
+
+
+        if session_headers:
+            self.session_headers.update(session_headers)
+        if session_cookies:
+            self.session_cookies.setCookies(cookies=session_cookies)
+        
+        self.prefix_url = prefix_url + self.prefix_url
+
+        for self.request in self.session:
+            
+            for i in range (0, self.request.repeat):
+                # save original headers and cookies
+                req_cookie = self.request.cookies.getCookies().copy()
+                req_headers = self.request.headers[:]                
+                url = self.request.url
+                
+                
+                
+                    
+
+                
+                
+                # update request header and cookie according new session headers
+                if self.session_headers:                
+                    self.request.updateRequestHeaders(self.session_headers)
+
+                
+                #update cookie which was recieved from response and saved into self.session_cookies
+
+                if self.session_cookies.getCookies():
+                    self.request.cookies.setCookies(self.session_cookies.getCookies())
+                   
+                #update url in request with session prefix
+                self.request.url = self.prefix_url + self.request.url               
+
+                # print (self.request.headers)
+                
 
                 if resp_format:
                     old_resp_format = self.request.resp_format                    
