@@ -1,4 +1,13 @@
 {
+	"build_systems":
+	[
+		{
+			"file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
+			"name": "Anaconda Python Builder",
+			"selector": "source.python",
+			"shell_cmd": "\"/usr/bin/python3.5\" -u \"$file\""
+		}
+	],
 	"folders":
 	[
 		{
@@ -10,7 +19,10 @@
 	],
 	"settings":
 	{
-		"python_interpreter": "/usr/bin/python3.5",
-		"env": {"PYTHONPATH":"/home/bykov/Projects/pyhttputils"},
+		"env":
+		{
+			"PYTHONPATH": "/home/bykov/Projects/pyhttputils"
+		},
+		"python_interpreter": "/usr/bin/python3.5"
 	}
 }

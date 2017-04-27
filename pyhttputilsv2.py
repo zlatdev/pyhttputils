@@ -1853,14 +1853,20 @@ class HTTPSessionv2(object):
 
 class HTTPSessionv3(object):
     '''
-    Class for genrating HTTP session. have method to send on request, create http flow from several requests and send on by one
-    
+    Class for genrating HTTP session. have method to send on request,
+    create http flow from several requests and send on by one
     '''
-    __slots__ = ("debug","request","session_cookies","sock","response","session","host","secure","session_headers","session_cookies","prefix_url","resp_format","session_http_version","ipv6","delay")
 
-    def __init__(self, host=None, secure = False, request=None, flow=None, session_headers = None, session_cookies = None,  prefix_url="", session_http_version="", resp_format=None, *args, **kwargs):
+    __slots__ = ("debug", "request", "session_cookies", "sock",
+                 "response", "session", "host", "secure", "session_headers",
+                 "session_cookies", "prefix_url", "resp_format",
+                 "session_http_version", "ipv6", "delay")
+
+    def __init__(self, host=None, secure=False, request=None, flow=None,
+                 session_headers=None, session_cookies=None,
+                 prefix_url="", session_http_version="", resp_format=None,
+                 *args, **kwargs):
         '''
-        
         @param host:used for configuring remote host ("host",port)
         @type host:tuple
         @param secure:is ssl connection used or not
@@ -1869,66 +1875,61 @@ class HTTPSessionv3(object):
         @type request:HTTPRequest
         @param flow: list of dict, describing the request
         @type flow: list
-        @param session_headers:
+        @param session_headers: additional headers for session adds for each r
         @type session_headers: dict
+        @param session_cookies: additional cookies for session adds for each r
+        @type session_cookies: dict
         @param prefix_url:
         @type prefix_url: string
         @param session_http_version:
         @type session_headers: string
         '''
-        
         try:
-            if kwargs["delay"]: 
+            if kwargs["delay"]:
                 self.delay = kwargs["delay"]
             else:
-                self.delay = False
-            
+                self.delay = 0
         except KeyError:
-            self.delay = False
-       
+            self.delay = 0
 
         try:
-            if kwargs["debug"] == True:
+            if kwargs["debug"] is True:
                 self.debug = True
             else:
                 self.debug = False
-            
         except KeyError:
             self.debug = False
-        
-        
+
         try:
-            if kwargs["use_ipv6"] == True:
+            if kwargs["use_ipv6"] is True:
                 self.ipv6 = True
             else:
                 self.ipv6 = False
         except KeyError:
                 self.ipv6 = False
 
-
-
-        
         self.sock = None
-        self.response=None
-        
-        self.session_cookies = HTTPCookies(cookies = session_cookies)
-        self.session_headers = []
-        
-        self.session = []       
-        
+        self.response = None
+
+        self.session_cookies = HTTPCookies(cookies=session_cookies)
+        self.session = []
+
         if request and isinstance(request, HTTPRequestv3):
             self.addSessionRequestv3(request)
-            self.request=None
+            self.request = None
         else:
             self.request = None
+
         if host:
-            self.host = host 
+            self.host = host
         else:
             self.host = None
+
         if secure:
             self.secure = True
         else:
             self.secure = False
+
         if session_headers:
             if "Cookie" in session_headers:
                 self.session_cookies.setCookies(session_headers["Cookie"])
@@ -1936,29 +1937,32 @@ class HTTPSessionv3(object):
             self.session_headers = session_headers
         else:
             self.session_headers = {}
-        
+
+        if session_cookies:
+            self.session_cookies.setCookies(session_cookies)
+
         if prefix_url:
             self.prefix_url = prefix_url
         else:
             self.prefix_url = ""
-        
+
         if session_http_version:
             self.session_http_version = session_http_version
         else:
             self.session_http_version = None
-        
+
         if resp_format:
             self.resp_format = resp_format
         else:
-            self.resp_format = "None"
+            self.resp_format = None
 
-        if flow:            
+        if flow:
             self.parseSessionv2(session_flow=flow)
-        
-    
-    def parseSessionv2 (self,session_flow = None, *args, **kwargs):
+
+    def parseSessionv2(self, session_flow=None, *args, **kwargs):
         '''
-        Parse http session and generate requests for next usage. Format of request :
+        Parse http session and generate requests for next usage. 
+        Format of request :
         @TODO fix work with cookies as dict
         
         {
@@ -1966,16 +1970,19 @@ class HTTPSessionv3(object):
          "method":Method to use GET|POST|HEAD
          "headers": dict of headers {"Header":"Value"}.
          "payload": payload to send could be dict {"param":"value} or raw text.
-         "enctype": how enctype the payload 0 - urlencoded, 1-multipart, 2-as is,
+         "enctype": how enctype the payload 
+                0 - urlencoded, 
+                1-multipart, 
+                2-as is,
          "repeat":how many times repeat request,
          "chunk_size":size of chunk, if send request payload chunked.
          "resp_format": all|body|headers|status
         }
 
-        
         @param session:list of requests formated in special way. see examples
         @type session:list
-        @param session_headers:dict of headers HeaderName:Header value, which will be assigned to each request in session
+        @param session_headers:dict of headers HeaderName:Header value, 
+            which will be assigned to each request in session
         @type session_headers:dict
         @param prefix_url:prefix what will be added to each url in session 
         @type prefix_url:str
@@ -2054,29 +2061,25 @@ class HTTPSessionv3(object):
 
         #     self.addSessionRequestv2(HTTPRequestv2(method, url, url_headers, url_payload, chunk_size, http_version, enctype, repeat, self.resp_format))
         
-
         for request in session_flow:
-            self.addSessionRequestv3(HTTPRequestv3(**request)) 
+            self.addSessionRequestv3(HTTPRequestv3(**request))
 
+    def addSessionRequestv3(self, request=None):
 
-
-
-
-
-
-    def addSessionRequestv3 (self,request=None):
-
-        if request and isinstance(request,HTTPRequestv3):
-            self.session.append(request)        
-        elif request and isinstance(request,dict):
+        if request and isinstance(request, HTTPRequestv3):
+            self.session.append(request)
+        elif request and isinstance(request, dict):
             self.session.append(HTTPRequestv3(**request))
         else:
             raise Exception("Invalid request object")
 
-    def runSessionv3(self, host = None, secure=False, delay=0, session_headers = None, session_cookies = None, prefix_url="", resp_format="None", version=None, *args, **kwargs):
+    def runSessionv3(self, host=None, secure=False, delay=False,
+                     session_headers=None, session_cookies=None,
+                     prefix_url="", resp_format=None, version=None,
+                     debug=False, *args, **kwargs):
         '''
         Run session. Send each request from self.session list.
-        
+
         @param delay:delay in seconds between requests
         @type delay:float
         @type self.request:HTTPRequest
@@ -2087,88 +2090,69 @@ class HTTPSessionv3(object):
             self.secure = True
         if self.delay:
             delay = self.delay
-      
+
         try:
-            if kwargs["use_ipv6"] == True:
+            if kwargs["use_ipv6"] is True:
                 self.ipv6 = True
             else:
                 self.ipv6 = False
         except KeyError:
                 self.ipv6 = False
 
-        try:
-            if kwargs["delay"]: 
-                self.delay = kwargs["delay"]
-            else:
-                self.delay = False
-            
-        except KeyError:
-            self.delay = False
-       
+        if delay:
+            self.delay = delay
 
-        try:
-            if kwargs["debug"] == True:
-                self.debug = True
-            else:
-                self.debug = False
-            
-        except KeyError:
-            self.debug = False
-
-
+        if debug:
+            self.debug = True
 
         if session_headers:
             self.session_headers.update(session_headers)
+
         if session_cookies:
             self.session_cookies.setCookies(cookies=session_cookies)
-        
+
         self.prefix_url = prefix_url + self.prefix_url
 
         for self.request in self.session:
-            
-            for i in range (0, self.request.repeat):
+            for i in range(0, self.request.repeat):
                 # save original headers and cookies
                 req_cookie = self.request.cookies.getCookies().copy()
-                req_headers = self.request.headers[:]                
+                req_headers = self.request.headers[:]
                 url = self.request.url
-                
-                
-                
-                    
 
-                
-                
-                # update request header and cookie according new session headers
-                if self.session_headers:                
+# update request header and cookie according new session headers
+                if self.session_headers:
                     self.request.updateRequestHeaders(self.session_headers)
 
-                
-                #update cookie which was recieved from response and saved into self.session_cookies
+# update cookie which was recieved from response and saved
+# into self.session_cookies
 
                 if self.session_cookies.getCookies():
                     self.request.cookies.setCookies(self.session_cookies.getCookies())
-                   
-                #update url in request with session prefix
-                self.request.url = self.prefix_url + self.request.url               
+
+                # update url in request with session prefix
+                self.request.url = self.prefix_url + self.request.url
 
                 # print (self.request.headers)
-                
 
+                # print (resp_format)
                 if resp_format:
-                    old_resp_format = self.request.resp_format                    
-                    self.request.resp_format=resp_format
-                    # print (resp_format, old_resp_format, self.resp_format, self.request.resp_format)
+                    self.resp_format = resp_format
+                    old_resp_format = self.request.resp_format
+                    self.request.resp_format = self.resp_format
+# print (resp_format, old_resp_format, self.resp_format, self.request.resp_format)
                 if version:
                     old_version = self.request.version
-                    self.request.version=version
-                    
-               
+                    self.request.version = version
+
                 # print (1)
                 if self.sock:
                     self.response = self.request.getResponse(sock=self.sock)
                 else:
-                    self.response = self.request.getResponse(host=self.host, use_ssl=self.secure, use_ipv6 = self.ipv6)
-                # print (1)                    
+                    self.response = self.request.getResponse(host=self.host,
+                                                        use_ssl=self.secure, 
+                                                        use_ipv6 = self.ipv6)
+                # print (self.response.status)                    
 
                 if self.response.sock:
                     self.sock = self.response.sock
@@ -2176,41 +2160,40 @@ class HTTPSessionv3(object):
                     self.sock = None
                 #update cookie from response headers
                 self.session_cookies.updateCookies(self.response.headers)
-                
+
+                # print (self.debug)
                 if self.debug:
-                    print (self.request.generateRawRequest())
+                    print(self.request.generateRawRequest())
                     # if self.session_cookies.cookies:
                     #     for cookie in 
                     #     print (self.request.headers["Cookie"])
-
+                print(self.request.resp_format)
                 print_resp = self.request.resp_format.lower()
                 if "status" in print_resp:
-                    print (self.response.status)
+                    print(self.response.status)
                 if "headers" in print_resp:
-                    print (self.response.headers)
+                    print(self.response.headers)
                 if "body" in print_resp:
-                    print (self.response.payload)
+                    print(self.response.payload)
                 if "all" in print_resp:
-                    print (self.response.status)
-                    print (self.response.headers)
-                    print (self.response.payload)
-                
+                    print(self.response.status)
+                    print(self.response.headers)
+                    print(self.response.payload)
+
                 self.request.headers = req_headers
-                self.request.cookies = HTTPCookies(cookies = req_cookie)
-                
+                self.request.cookies = HTTPCookies(cookies=req_cookie)
+
                 # self.request.headers["Cookie"] = req_cookie
-                
+
                 if prefix_url:
                     self.request.url = url
                 if resp_format:
                     self.request.resp_format = old_resp_format
                 if version:
                     self.request.version = old_version
-                self.response = None                
+                self.response = None
                 time.sleep(delay)
             self.request = None
-            
-        
 
         self.closeSession()
 
@@ -2330,7 +2313,7 @@ class HTTPSessionv3(object):
 
         self.closeSession(one_session=True) 
 
-    def closeSession(self,session_flow = False,one_session = False):
+    def closeSession(self, session_flow=False, one_session=False):
         """
         Close socket connections
         """
@@ -2395,7 +2378,11 @@ class HTTPClient(threading.Thread):
         @type c_args:
         @param c_kwargs:
         @type c_kwargs:
+
         """
+        self.api_version = kwargs["v"]
+        del (kwargs["v"])
+
         threading.Thread.__init__(self,*args,**kwargs)
         
         self.host = host
@@ -2407,7 +2394,10 @@ class HTTPClient(threading.Thread):
         if not session_headers:
             session_headers = {}
         
-        self.runhttpsession = HTTPSessionv2(flow = flow, session_headers=session_headers.copy(), prefix_url=prefix_url, session_http_version=session_http_version, resp_format=resp_format, debug=debug)       
+        if self.api_version == 2:
+            self.runhttpsession = HTTPSessionv2(flow = flow, session_headers=session_headers.copy(), prefix_url=prefix_url, session_http_version=session_http_version, resp_format=resp_format, debug=debug)       
+        else:
+            self.runhttpsession = HTTPSessionv3(flow = flow, session_headers=session_headers.copy(), prefix_url=prefix_url, session_http_version=session_http_version, resp_format=resp_format, debug=debug)       
 
     def run(self):
         
@@ -2417,15 +2407,22 @@ class HTTPClient(threading.Thread):
         while ct-st < self.time:
             
             if self.xff:
-                self.runhttpsession.runSessionv2(self.host, self.secure, self.delay,session_headers = {"X-Forwarded-For": generateIPv4Address()})
+                if self.api_version == 2:
+                    self.runhttpsession.runSessionv2(self.host, self.secure, self.delay,session_headers = {"X-Forwarded-For": generateIPv4Address()})
+                else:
+                    self.runhttpsession.runSessionv3(self.host, self.secure, self.delay,session_headers = {"X-Forwarded-For": generateIPv4Address()})
             else:
-                self.runhttpsession.runSessionv2(self.host, self.secure, self.delay)
+                if self.api_version == 2:
+                    self.runhttpsession.runSessionv2(self.host, self.secure, self.delay)
+                else:
+                    self.runhttpsession.runSessionv3(self.host, self.secure, self.delay)
             ct = time.time()         
 
         
         print("session finished", threading.currentThread().name, multiprocessing.current_process().name, "on host:",self.host)
 
         return
+
 
 class HTTPClientsPool(multiprocessing.Process):
     
