@@ -186,7 +186,7 @@ class HTTPRequestv3(object):
     """
     __slots__ = ("method", "url", "headers","cookies","params","payload","chunk_size","version","enctype","repeat","resp_format","request")
 
-    def __init__ (self,method="GET", url="/", headers=None, cookies = None, params=None, payload=None, chunk_size=0, version="HTTP/1.1", enctype=POST_TYPE_URLENCODED, repeat=1, resp_format=None):
+    def __init__ (self,method="GET", url="/", headers=None, cookies = None, params=None, payload=None, chunk_size=0, version="HTTP/1.1", enctype=POST_TYPE_URLENCODED, repeat=1, resp_format="None"):
         """
         Constructor for HTTP request.
         
@@ -222,13 +222,12 @@ class HTTPRequestv3(object):
         self.version = version
         self.enctype = enctype
         self.repeat=repeat
-        self.resp_format = resp_format
-        
+        self.resp_format = resp_format        
         self.request = None
 
 
 
-    def updateRequestHeaders(self, headers={}) :
+    def updateRequestHeaders(self, headers=None) :
         if not headers:
             return
 
@@ -243,9 +242,7 @@ class HTTPRequestv3(object):
         """
         Generate request for single use
         """
-        
-
-             
+ 
         self.request = generateRequestv3(self.method, self.url, self.headers, self.cookies, self.params, self.payload, self.chunk_size, self.version, self.enctype)
 
     
@@ -343,31 +340,30 @@ class HTTPCookies (object):
             self.cookies = {}
         if cookies:
             self.cookies.update(cookies)
-    def __str__ (self):
+
+    def __str__(self):
         return self.getCookieHeaderValue()
 
-    def updateCookies(self,headers=None):
+    def updateCookies(self, headers=None):
         if headers:
             cookies_from_headers = parseCookie(headers)
             self.cookies.update(cookies_from_headers)
-            
-    def setCookies(self, cookies = None):
+
+    def setCookies(self, cookies=None):
         if cookies:
             self.cookies.update(cookies)
-    
+
     def getCookies(self):
         return self.cookies
 
-
-        
-    def getCookieHeaderValue(self,cookies = None):
+    def getCookieHeaderValue(self, cookies=None):
         if cookies:
             self.cookies.update(cookies)
-        return  "; ".join(["%s=%s" % (n,v) for (n,v) in self.cookies.items()])
-     
-    def getCookieHeader(self, cookies = None):
+        return "; ".join(["%s=%s" % (n, v) for (n, v) in self.cookies.items()])
+
+    def getCookieHeader(self, cookies=None):
         if cookies:
-            self.cookies.update(cookies)           
+            self.cookies.update(cookies)
         return  {"Cookie":"; ".join(["%s=%s" % (n,v) for (n,v) in self.cookies.items()])}
 
 class HTTPRequest(object):
@@ -1957,9 +1953,9 @@ class HTTPSessionv3(object):
             self.resp_format = None
 
         if flow:
-            self.parseSessionv2(session_flow=flow)
+            self.parseSessionv3(session_flow=flow)
 
-    def parseSessionv2(self, session_flow=None, *args, **kwargs):
+    def parseSessionv3(self, session_flow=None, *args, **kwargs):
         '''
         Parse http session and generate requests for next usage. 
         Format of request :
@@ -2057,8 +2053,6 @@ class HTTPSessionv3(object):
         #             http_version = self.session_http_version
         #         else:
         #             http_version = "HTTP/1.1"
-            
-
         #     self.addSessionRequestv2(HTTPRequestv2(method, url, url_headers, url_payload, chunk_size, http_version, enctype, repeat, self.resp_format))
         
         for request in session_flow:
@@ -2120,12 +2114,12 @@ class HTTPSessionv3(object):
                 req_headers = self.request.headers[:]
                 url = self.request.url
 
-# update request header and cookie according new session headers
+                # update request header and cookie according new session headers
                 if self.session_headers:
                     self.request.updateRequestHeaders(self.session_headers)
 
-# update cookie which was recieved from response and saved
-# into self.session_cookies
+                # update cookie which was recieved from response and saved
+                # into self.session_cookies
 
                 if self.session_cookies.getCookies():
                     self.request.cookies.setCookies(self.session_cookies.getCookies())
@@ -2137,10 +2131,15 @@ class HTTPSessionv3(object):
 
                 # print (resp_format)
                 if resp_format:
-                    self.resp_format = resp_format
+                    old_resp_format = self.request.resp_format
+                    self.request.resp_format = resp_format
+                elif self.resp_format:
                     old_resp_format = self.request.resp_format
                     self.request.resp_format = self.resp_format
-# print (resp_format, old_resp_format, self.resp_format, self.request.resp_format)
+                else:
+                    pass
+
+                # print (resp_format, old_resp_format, self.resp_format, self.request.resp_format)
                 if version:
                     old_version = self.request.version
                     self.request.version = version
@@ -2167,7 +2166,7 @@ class HTTPSessionv3(object):
                     # if self.session_cookies.cookies:
                     #     for cookie in 
                     #     print (self.request.headers["Cookie"])
-                print(self.request.resp_format)
+               
                 print_resp = self.request.resp_format.lower()
                 if "status" in print_resp:
                     print(self.response.status)
@@ -2187,7 +2186,7 @@ class HTTPSessionv3(object):
 
                 if prefix_url:
                     self.request.url = url
-                if resp_format:
+                if resp_format or self.resp_format:
                     self.request.resp_format = old_resp_format
                 if version:
                     self.request.version = old_version
@@ -2360,10 +2359,6 @@ class HTTPSessionv3(object):
             f.close()
 
 
-
-
-        
-        
 class HTTPClient(threading.Thread):
     """
     
