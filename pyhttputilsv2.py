@@ -232,7 +232,7 @@ class HTTPRequestv3(object):
             return
 
         if "Cookie" in headers:
-            self.cookies.updateCookies(cookies = headers["Cookie"])
+            self.cookies.setCookies(cookies=headers["Cookie"])
             del headers["Cookie"]
 
         for header,value in headers.items():
@@ -331,9 +331,9 @@ class HTTPResponse(object):
         self.sock = sock
         self.payload = payload
 
-class HTTPCookies (object):
-    
-    def __init__(self,headers=None,cookies = None):
+class HTTPCookies(object):
+
+    def __init__(self, headers=None, cookies=None):
         if headers:
             self.cookies = parseCookie(headers)
         else:
