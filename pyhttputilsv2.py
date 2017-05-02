@@ -765,7 +765,7 @@ def generateRequestv3 (method, url, headers=None, cookies = None, params = None,
         request_headers.append("%s: %s" % (header, value))
     
 
-    if cookies :    
+    if cookies.getCookies() :    
         request_headers.append("%s: %s" % ("Cookie",str(cookies)))
         
             
