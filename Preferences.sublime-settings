@@ -1,0 +1,16 @@
+{
+	"auto_indent": true,
+	"color_scheme": "Packages/User/Monokai (SublimePythonIDE).tmTheme",
+	"detect_indentation": true,
+	"ignored_packages":
+	[
+		"SublimePythonIDE",
+		"Vintage"
+	],
+	"indent_to_bracket": true,
+	"smart_indent": true,
+	"tab_size": 4,
+	"translate_tabs_to_spaces": true,
+	"trim_automatic_white_space": true,
+	"use_tab_stops": true
+}
