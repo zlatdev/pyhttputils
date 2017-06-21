@@ -184,9 +184,21 @@ class HTTPRequestv3(object):
     """
         Class for HTTP request which will be send
     """
-    __slots__ = ("method", "url", "headers","cookies","params","payload","chunk_size","version","enctype","repeat","resp_format","request")
+    __slots__ = ("method", "url", "headers","cookies","params","payload","chunk_size","version","enctype","repeat","resp_format","request","doassert")
 
-    def __init__ (self,method="GET", url="/", headers=None, cookies = None, params=None, payload=None, chunk_size=0, version="HTTP/1.1", enctype=POST_TYPE_URLENCODED, repeat=1, resp_format="None"):
+    def __init__(self,
+                 method="GET",
+                 url="/",
+                 headers=None,
+                 cookies=None,
+                 params=None,
+                 payload=None,
+                 chunk_size=0,
+                 version="HTTP/1.1",
+                 enctype=POST_TYPE_URLENCODED,
+                 repeat=1,
+                 resp_format="None",
+                 doassert=None):
         """
         Constructor for HTTP request.
         
@@ -221,9 +233,10 @@ class HTTPRequestv3(object):
         self.chunk_size = chunk_size
         self.version = version
         self.enctype = enctype
-        self.repeat=repeat
-        self.resp_format = resp_format        
+        self.repeat = repeat
+        self.resp_format = resp_format
         self.request = None
+        self.doassert = doassert
 
 
 
@@ -236,7 +249,7 @@ class HTTPRequestv3(object):
             del headers["Cookie"]
 
         for header,value in headers.items():
-            self.headers.append((header,value))
+            self.headers.append((header, value))
 
     def generateRequest(self):
         """
@@ -274,9 +287,9 @@ class HTTPRequestv3(object):
         Generate request to use in in session
         """
         
-        return (self, self.repeat, self.resp_format)
+        return (self, self.repeat, self.resp_format, self.doassert)
 
-    def getResponse(self,host=None,use_ssl=False,sock=None,use_ipv6=False,resp_format = None):
+    def getResponse(self,host=None, use_ssl=False, sock=None, use_ipv6=False, resp_format=None):
         """
         Send request and get response and return response object
         
@@ -293,7 +306,7 @@ class HTTPRequestv3(object):
         if not self.request:
             self.generateRequest()
         
-        return sendRequest(self.request, host, use_ssl, sock, self.resp_format, use_ipv6)
+        return sendRequest(self.request, host, use_ssl, sock, self.resp_format, use_ipv6, doassert=self.doassert)
 
 class HTTPResponse(object):
     """
@@ -303,7 +316,8 @@ class HTTPResponse(object):
         
 
     """
-    def __init__(self, headers = None, payload = b"", sock = None, resp_format=None):
+
+    def __init__(self, headers = None, payload = b"", sock = None, resp_format=None, doassert=None):
         """
             object Constructor
 
@@ -317,19 +331,53 @@ class HTTPResponse(object):
         else:
             try:
                 self.status = headers[0]
-                self.status_code = int (self.status[9:12])
+                self.status_code = int(self.status[9:12])
             except (IndexError, ValueError):
                 self.status = None
-                self.status_code=None
+                self.status_code = None
             try:
                 self.headers = headers[1:]
             except IndexError:
                 self.headers = []
-        
 
         self.cookies = HTTPCookies(self.headers)
         self.sock = sock
         self.payload = payload
+
+        self.resassert = self.checkAssertion(doassert)
+
+    def checkAssertion(self, cond=None):
+        if cond:
+            results = []
+            for assert_item in cond.items():
+                try:
+                    key, value = assert_item
+                    if key == "payload":
+                        assert value.encode() in self[key]
+                        results.append(True)
+                    
+                    if key == "headers":
+                        for header in self[key]:
+                            try:
+                                assert value in header
+                                results.append(True)
+                                break
+                            except AssertionError:
+                                continue
+                        else:
+                            results.append(False)
+                    if key == "status":
+                        assert value in self[key]
+                        results.append(True)
+                except AssertionError:
+                    results.append(False)
+            return all(results)
+        else:
+            return False
+
+    def __getitem__(self, name):
+        if name in self.__dict__:
+            return self.__dict__[name]
 
 class HTTPCookies(object):
 
@@ -779,7 +827,9 @@ def generateRequestv3 (method, url, headers=None, cookies = None, params = None,
 
     return (request_headers, request_body)
 
-def sendRequest(request_obj,host=None,use_ssl=False,sock=None,resp_format=None, use_ipv6=False, raw_request=None,is_chunked = False):
+def sendRequest(request_obj, host=None, use_ssl=False, sock=None,
+                resp_format=None, use_ipv6=False, raw_request=None,
+                is_chunked=False, doassert=None):
     """
     Send request passed in first parameter as tuple of HTTPSession headers(list) and request body(str) 
     
@@ -871,7 +921,7 @@ def sendRequest(request_obj,host=None,use_ssl=False,sock=None,resp_format=None, 
             raw_req_len = len (raw_request)
             
             len_sent = session.send (raw_request.encode(DEFAULT_REQUEST_ENCODING))
-            if len_sent != raw_req_len:                
+            if len_sent != raw_req_len:
                     raise socket.error("Not full request headers were send. Drop connection!")
 
             chunk = session.recv(BUFF_READ_SIZE)
@@ -880,12 +930,9 @@ def sendRequest(request_obj,host=None,use_ssl=False,sock=None,resp_format=None, 
 
 
             request_h = DEFAULT_HTTP_DELIMETER.join(request[0]).encode(DEFAULT_REQUEST_ENCODING)
-            
-            len_request_h = len(request_h)
-            
-            
 
-            
+            len_request_h = len(request_h)
+
             if HEADER_EXPECT100C in request[0] :
                 # print ("08")
                 len_sent = session.send (request_h)
@@ -1099,26 +1146,21 @@ def sendRequest(request_obj,host=None,use_ssl=False,sock=None,resp_format=None, 
             session = None
         
         if not resp_format:
-            return HTTPResponse(headers = resp_headers, payload = b"",sock = session) 
+            return HTTPResponse(headers=resp_headers, payload=b"", sock=session, doassert=doassert)
         elif "body" in resp_format:
-            return HTTPResponse(headers = resp_headers, payload = resp_body,sock = session)   
+            return HTTPResponse(headers = resp_headers, payload = resp_body,sock = session, doassert=doassert)   
         elif "all" in resp_format:
-            return HTTPResponse(headers = resp_headers, payload = resp_body,sock = session)
+            return HTTPResponse(headers = resp_headers, payload = resp_body,sock = session, doassert=doassert)
         elif "headers" in resp_format:
-            return HTTPResponse(headers = resp_headers, payload = b"",sock = session)
+            return HTTPResponse(headers = resp_headers, payload = b"",sock = session, doassert=doassert)
         elif "status" in resp_format:
-            return HTTPResponse(headers = resp_headers, payload = b"",sock = session)    
+            return HTTPResponse(headers = resp_headers, payload = b"",sock = session, doassert=doassert)
         else:
-            return HTTPResponse(headers = resp_headers, payload = b"",sock = session)
+            return HTTPResponse(headers = resp_headers, payload = b"",sock = session, doassert=doassert)
 
         del resp_headers
         del resp_body 
-            
 
-
-        
-        
-    
     except socket.error as e:
         # print ("016")
 
@@ -1128,8 +1170,6 @@ def sendRequest(request_obj,host=None,use_ssl=False,sock=None,resp_format=None, 
         return HTTPResponse(headers = [str(e.errno)],payload = [e.strerror],sock = session)
     except KeyboardInterrupt:
         print ("request interrupted!")
-
-    
 
 
 def _generateSampleAlphaChars (length):
@@ -1856,7 +1896,7 @@ class HTTPSessionv3(object):
     __slots__ = ("debug", "request", "session_cookies", "sock",
                  "response", "session", "host", "secure", "session_headers",
                  "session_cookies", "prefix_url", "resp_format",
-                 "session_http_version", "ipv6", "delay")
+                 "session_http_version", "ipv6", "delay","doassert")
 
     def __init__(self, host=None, secure=False, request=None, flow=None,
                  session_headers=None, session_cookies=None,
@@ -1985,76 +2025,7 @@ class HTTPSessionv3(object):
         @param session_http_version:
         @type session_http_version:
         '''
-     
-        # for request in session_flow:      
 
-        #     try:
-        #         method = request["method"]
-        #     except KeyError:
-        #         method = "GET"
-          
-        #     try:
-        #         url = request["url"]
-        #         if self.prefix_url:
-        #             url = self.prefix_url+url
-        #     except KeyError:
-        #         url="/"
-            
-        #     try:
-        #         # print (request["headers"])
-        #         url_headers = request["headers"]
-        #         # print (url_headers)
-        #         url_headers.update(self.session_headers)
-        #         if self.session_cookies.getCookies() and "Cookie" in url_headers:
-        #             url_headers["Cookie"].update(self.session_cookies.getCookies())
-        #         else:
-        #             if self.session_cookies.cookies:
-        #                 url_headers["Cookie"] = self.session_cookies.getCookies()
-        #     except KeyError:
-        #         url_headers = {}
-        #         url_headers.update(self.session_headers)            
-        #         if self.session_cookies.cookies:
-        #             url_headers["Cookie"] = self.session_cookies.getCookies()
-            
-
-
-
-        #     try:
-        #         url_payload = request["payload"]
-        #     except KeyError:
-        #         url_payload = None
-            
-        #     try:
-        #         enctype = int(request["enctype"])
-                
-        #     except KeyError:
-        #         enctype = 0    
-            
-        #     try:
-        #         repeat = request["repeat"]
-        #     except KeyError:
-        #         repeat = 1
-                
-        #     try:
-        #         chunk_size = request["chunk_size"]
-        #     except KeyError:
-        #         chunk_size = 0
-            
-        #     try:
-        #         if not self.resp_format:
-        #             self.resp_format = request["resp_format"]
-        #     except KeyError:
-        #         self.resp_format = "None"
-
-        #     try:
-        #         http_version = request["version"]
-        #     except KeyError:
-        #         if self.session_http_version:
-        #             http_version = self.session_http_version
-        #         else:
-        #             http_version = "HTTP/1.1"
-        #     self.addSessionRequestv2(HTTPRequestv2(method, url, url_headers, url_payload, chunk_size, http_version, enctype, repeat, self.resp_format))
-        
         for request in session_flow:
             self.addSessionRequestv3(HTTPRequestv3(**request))
 
@@ -2078,6 +2049,14 @@ class HTTPSessionv3(object):
         @type delay:float
         @type self.request:HTTPRequest
         '''
+        try:
+            if kwargs["doassert"]:
+                self.doassert = kwargs["doassert"]
+            else:
+                self.doassert = False
+        except KeyError:
+            self.doassert = False
+
         if host:
             self.host = host
         if secure:
@@ -2157,16 +2136,29 @@ class HTTPSessionv3(object):
                     self.sock = self.response.sock
                 else:
                     self.sock = None
-                #update cookie from response headers
+                # update cookie from response headers
                 self.session_cookies.updateCookies(self.response.headers)
 
                 # print (self.debug)
                 if self.debug:
                     print(self.request.generateRawRequest())
                     # if self.session_cookies.cookies:
-                    #     for cookie in 
-                    #     print (self.request.headers["Cookie"])
-               
+                    # for cookie in 
+                    # print (self.request.headers["Cookie"])
+
+                if self.doassert:
+                    try:
+                        
+                        key, value = list(self.doassert.items())[0]
+                        if key in "payload":
+                            assert bytes(value) in self.response[key]
+                            print("passed")
+                        else:
+                            assert value in self.response[key]
+                            print("passed")
+                    except AssertionError:
+                        print("failed. should be " + value)
+
                 print_resp = self.request.resp_format.lower()
                 if "status" in print_resp:
                     print(self.response.status)
