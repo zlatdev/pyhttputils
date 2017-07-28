@@ -18,6 +18,7 @@ import ssl
 import threading
 import multiprocessing
 import argparse
+import base64
 
 BUFF_READ_SIZE = 4096
 
