@@ -112,44 +112,40 @@ def generateRequestv3 (method, url, headers=None, cookies = None, params = None,
         request_headers.append(request_str % (method.upper(), url+"?"+ generateURLEncodedPayload(params), version))
     else:
         request_headers.append(request_str % (method.upper(), url, version))  
-    
-    if (method.lower().strip() == "get"):        
-        request_body=[]
-        
+
+    if (method.lower().strip() == "get"):
+        request_body = []
+
     elif (method.lower().strip() == "post"):
-        
+
         if ready_payload:
-            
+
             if post_type == POST_TYPE_URLENCODED:
-            
-                request_headers.append("Content-Type: application/x-www-form-urlencoded")                
+
+                request_headers.append("Content-Type: application/x-www-form-urlencoded")
 
                 if chunk_size>0:
-                    request_headers.append("Transfer-Encoding: chunked")    
+                    request_headers.append("Transfer-Encoding: chunked")
                     request_body = _generateChunkBody(chunk_size,ready_payload[0])
-                
-                else:                
+
+                else:
                     request_body = []
                     request_headers.append("Content-Length: %d" % len(ready_payload[0]))
-                 
-
                     request_body.append(ready_payload[0])
-            
+
             elif post_type == POST_TYPE_MULTIPART:
-               
-                multipart_payload = generateMultipartPayload(payload)
+
                 request_headers.append("Content-Type: multipart/form-data; boundary=%s" % ready_payload[1])
-                
+
                 if (chunk_size>0):
                     request_body = _generateChunkBody(chunk_size,multipart_payload[0])
                     request_headers.append("Transfer-Encoding: chunked")
                 else:
                     request_body=[]
                     request_headers.append("Content-Length: %d" % len(multipart_payload[0]))
-                    
+
                     request_body.append(multipart_payload[0])
-                
-            
+
             elif post_type == POST_TYPE_RAW:
 
                 if chunk_size > 0:
@@ -161,15 +157,13 @@ def generateRequestv3 (method, url, headers=None, cookies = None, params = None,
                     request_body = []
                     request_headers.append("Content-Length: %d" % len(str(ready_payload[0])))
                     request_body.append(ready_payload[0])
-                
-            
+
         else:
             request_body = []
-    
             request_headers.append("Content-Length: 0")
-    
+
     elif (method.lower().strip() == "patch"):
-        
+
         if ready_payload:
 
                 if chunk_size > 0:
@@ -182,16 +176,11 @@ def generateRequestv3 (method, url, headers=None, cookies = None, params = None,
                     request_headers.append("Content-Length: %d" % len(str(payload)))
                     request_body.append(ready_payload[0])
 
-        
-
-            
         else:
             request_body = []
             #request.append("Content-Type : application/x-www-form-urlencoded")
             request_headers.append("Content-Length: 0")
-            
-   
-            
+
     else:
         if payload:
             request_headers.append(request_str % (method.upper(), url, version))
@@ -199,26 +188,18 @@ def generateRequestv3 (method, url, headers=None, cookies = None, params = None,
             request_body = str(payload)
         else:
             request_headers.append(request_str % (method.upper(), url, version))
-            request_body = ""        
-             
-
+            request_body = ""
 
     for header,value in headers:
         # print (header,value)
         request_headers.append("%s: %s" % (header, value))
-    
 
     if cookies.getCookies() :    
         request_headers.append("%s: %s" % ("Cookie",str(cookies)))
-        
-            
 
-        
-            
-    request_headers.append("") 
-    request_headers.append("")       
-       
-   
+
+    request_headers.append("")
+    request_headers.append("")
 
     return (request_headers, request_body)
 
@@ -771,9 +752,8 @@ def generateMultipartPayload (data):
     Generate multipart body message
     
     """
-    
-    
-    multipartdata = [] 
+
+    multipartdata = []
     boundary = _generateMultipartBoundary(70)
     for name,value in data.items():
         multipartdata.append("--%s" % boundary )
@@ -783,4 +763,14 @@ def generateMultipartPayload (data):
     multipartdata.append("--%s--" % boundary)
   
     return  (DEFAULT_HTTP_DELIMETER.join(multipartdata),boundary)
-    
+
+def _generateMultipartFile (field_name, filename):
+    """
+        Generate multipart part of file upload
+    """
+    if filename.startswith("@"):
+        pass
+    else:
+        pass
+
+
