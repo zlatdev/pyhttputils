@@ -1,4 +1,4 @@
-from urllib.parse import urlencode
+from urllib.parse import urlencode, quote_plus
 from random import sample, randint
 from uuid import uuid4
 from io import StringIO
@@ -138,13 +138,13 @@ def generateRequestv3 (method, url, headers=None, cookies = None, params = None,
                 request_headers.append("Content-Type: multipart/form-data; boundary=%s" % ready_payload[1])
 
                 if (chunk_size>0):
-                    request_body = _generateChunkBody(chunk_size,multipart_payload[0])
+                    request_body = _generateChunkBody(chunk_size,ready_payload[0])
                     request_headers.append("Transfer-Encoding: chunked")
                 else:
                     request_body=[]
-                    request_headers.append("Content-Length: %d" % len(multipart_payload[0]))
+                    request_headers.append("Content-Length: %d" % len(ready_payload[0]))
 
-                    request_body.append(multipart_payload[0])
+                    request_body.append(ready_payload[0])
 
             elif post_type == POST_TYPE_RAW:
 
@@ -755,22 +755,42 @@ def generateMultipartPayload (data):
 
     multipartdata = []
     boundary = _generateMultipartBoundary(70)
-    for name,value in data.items():
-        multipartdata.append("--%s" % boundary )
-        multipartdata.append ("Content-Disposition: form-data; name=\"%s\"" % name)
-        multipartdata.append ("")
-        multipartdata.append (value)
-    multipartdata.append("--%s--" % boundary)
-  
-    return  (DEFAULT_HTTP_DELIMETER.join(multipartdata),boundary)
+    
+    if "files" in data:
+        multipartdata.extend(_generateMultipartFile(data["files"], boundary))
+        del data["files"]
 
-def _generateMultipartFile (field_name, filename):
+    for name,value in data.items(): 
+            multipartdata.append("--%s" % boundary )
+            multipartdata.append ("Content-Disposition: form-data; name=\"%s\"" % name)
+            multipartdata.append ("")
+            multipartdata.append (value)
+    multipartdata.append("--%s--" % boundary)
+
+    return (DEFAULT_HTTP_DELIMETER.join(multipartdata),boundary)
+
+def _generateMultipartFile (files, boundary):
     """
         Generate multipart part of file upload
     """
-    if filename.startswith("@"):
-        pass
-    else:
-        pass
 
+    multipartdata = []
+    for name, filedata in files.items():
+        if filedata.setdefault("filename","").startswith("@"):
+            fp = open(filedata["filename"][1:], "r")
+            content = fp.read()
+            fp.close
 
+            multipartdata.append("--%s" % boundary)
+            multipartdata.append("Content-Disposition: form-data; name=\"{name}\"; filename=\"{filename}\"".format(name=quote_plus(name), filename=quote_plus(filedata["filename"][1:])))
+            multipartdata.append("Content-Type: {}".format(filedata.get("mimetype", "text/plain")))
+            multipartdata.append("")
+            multipartdata.append(content)
+        else:
+            multipartdata.append("--%s" % boundary)
+            multipartdata.append("Content-Disposition: form-data; name=\"{name}\"; filename=\"{filename}\"".format(name=quote_plus(name), filename=quote_plus(filedata["filename"])))
+            multipartdata.append("Content-Type: {}".format(filedata.get("mimetype", "text/plain")))
+            multipartdata.append("")
+            multipartdata.append(filedata.get("filecontent", ""))
+
+    return multipartdata
