@@ -2,6 +2,7 @@ from .HTTPRequest import *
 from .HTTPResponse import *
 from .HTTPCookies import *
 
+import time
 
 class HTTPSession(object):
     '''

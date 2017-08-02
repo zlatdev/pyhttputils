@@ -6,7 +6,7 @@ class HTTPRequest(object):
     """
         Class for HTTP request which will be send
     """
-    __slots__ = ("method", "url", "headers","cookies","params","payload","chunk_size","version","enctype","repeat","resp_format","request","doassert")
+    __slots__ = ("method", "url", "headers", "cookies", "params", "payload", "chunk_size", "version", "enctype", "repeat", "resp_format", "request", "doassert")
 
     def __init__(self,
                  method="GET",
@@ -23,7 +23,6 @@ class HTTPRequest(object):
                  doassert=None):
         """
         Constructor for HTTP request.
-        
         @param method:request method
         @type method:str
         @param url:requested url
@@ -60,8 +59,6 @@ class HTTPRequest(object):
         self.request = None
         self.doassert = doassert
 
-
-
     def updateRequestHeaders(self, headers=None):
         if not headers:
             return
@@ -70,24 +67,21 @@ class HTTPRequest(object):
             self.cookies.setCookies(cookies=headers["Cookie"])
             del headers["Cookie"]
 
-        for header,value in headers.items():
+        for header, value in headers.items():
             self.headers.append((header, value))
 
     def generateRequest(self):
         """
         Generate request for single use
         """
- 
+
         self.request = generateRequestv3(self.method, self.url, self.headers, self.cookies, self.params, self.payload, self.chunk_size, self.version, self.enctype)
 
-    
     def generateRawRequest(self):
-        
-       
-        
+
         if not self.request:
             self.generateRequest()
-        
+
         request_h = DEFAULT_HTTP_DELIMETER.join(self.request[0])
         # print (request_h)
 
@@ -103,7 +97,7 @@ class HTTPRequest(object):
             return request_h.encode() + body_payload.encode()
         else:
             return request_h.encode() + b""
-        
+
     def generateSessionRequest(self):
         """
         Generate request to use in in session

@@ -7,12 +7,11 @@ from .HTTPResponse import *
 
 
 
-import time
 import socket
 import ssl
-import threading
-import multiprocessing
-import argparse
+# import threading
+# import multiprocessing
+# import argparse
 import base64
 
 BUFF_READ_SIZE = 4096
@@ -53,47 +52,50 @@ RESPONSE_STATUS = 1
 RESPONSE_HEADERS = 2
 RESPONSE_BODY = 3
 
-def generateRequestv3 (method, url, headers=None, cookies = None, params = None, payload=None, chunk_size=0,version="HTTP/1.1",post_type=POST_TYPE_URLENCODED):
-    """
-    Function generate request from parameters
 
-    @param method: request method
-    @type method: string
-    @param url: requested url
-    @type url: string
-    @param headers: list of tuple (header_name, header_value)
-    @type headers: list
-    @param payload: data which send with 
-    @type payload: any
-    @param chunk_size: chunk size for Chunked requests. if 0, request is not chunked
-    @type chunk_size: integer
-    @param version: http version
-    @type version: string
-    @param post_type: encoding for data: 0 - urlencoding for GET and POST requests, 1 - multipart, 2 - raw data as is 
-    @type post_type: integer
-    
-     
+def generateRequestv3(method, url, headers=None, cookies=None, params=None, payload=None, chunk_size=0, version="HTTP/1.1", post_type=POST_TYPE_URLENCODED):
+    """
+        Function generate request from parameters
+
+        @param method: request method
+        @type method: string
+        @param url: requested url
+        @type url: string
+        @param headers: list of tuple (header_name, header_value)
+        @type headers: list
+        @param cookies: dict of cookies name: value
+        @type cookies: dict
+        @param params: dict of params which will be send in QS
+        @type params: dict
+        @param payload: data which send with
+        @type payload: any
+        @param chunk_size: chunk size for Chunked requests. if 0, request is not chunked
+        @type chunk_size: integer
+        @param version: http version
+        @type version: string
+        @param post_type: encoding for data: 0 - urlencoding for GET and POST requests, 1 - multipart, 2 - raw data as is
+        @type post_type: integer
     """
 
     request_headers = []
     request_body = []
     request_str = "%s %s %s"
 
-    if headers == None:
+    if headers is None:
         headers = {}
-    
+
     if params:
-        if isinstance(params,dict) and "RANDOM_VALUE" in params :
-            name_tmp = params ["RANDOM_VALUE"]
-            del  params ["RANDOM_VALUE"]
-            params.update({name_tmp:uuid4()})    
-    
+        if isinstance(params, dict) and "RANDOM_VALUE" in params:
+            name_tmp = params["RANDOM_VALUE"]
+            del params["RANDOM_VALUE"]
+            params.update({name_tmp: uuid4()})
+
     if payload:
-        if isinstance(payload,dict) and "RANDOM_VALUE" in payload :
-            name_tmp = payload ["RANDOM_VALUE"]
-            del  payload ["RANDOM_VALUE"]
-            payload.update({name_tmp:uuid4()}) 
-    
+        if isinstance(payload, dict) and "RANDOM_VALUE" in payload:
+            name_tmp = payload["RANDOM_VALUE"]
+            del payload["RANDOM_VALUE"]
+            payload.update({name_tmp: uuid4()})
+
     if payload:
         if post_type == POST_TYPE_URLENCODED:
             ready_payload = (generateURLEncodedPayload(payload),)
@@ -102,16 +104,14 @@ def generateRequestv3 (method, url, headers=None, cookies = None, params = None,
         elif post_type == POST_TYPE_RAW:
             ready_payload = (str(payload),)
         else:
-            ready_payload = (generateURLEncodedPayload(payload,not_urlenc = True ),)
+            ready_payload = (generateURLEncodedPayload(payload, not_urlenc=True),)
     else:
         ready_payload = None
 
-
-
     if params:
-        request_headers.append(request_str % (method.upper(), url+"?"+ generateURLEncodedPayload(params), version))
+        request_headers.append(request_str % (method.upper(), url + "?" + generateURLEncodedPayload(params), version))
     else:
-        request_headers.append(request_str % (method.upper(), url, version))  
+        request_headers.append(request_str % (method.upper(), url, version))
 
     if (method.lower().strip() == "get"):
         request_body = []
@@ -124,9 +124,9 @@ def generateRequestv3 (method, url, headers=None, cookies = None, params = None,
 
                 request_headers.append("Content-Type: application/x-www-form-urlencoded")
 
-                if chunk_size>0:
+                if chunk_size > 0:
                     request_headers.append("Transfer-Encoding: chunked")
-                    request_body = _generateChunkBody(chunk_size,ready_payload[0])
+                    request_body = _generateChunkBody(chunk_size, ready_payload[0])
 
                 else:
                     request_body = []
@@ -137,11 +137,11 @@ def generateRequestv3 (method, url, headers=None, cookies = None, params = None,
 
                 request_headers.append("Content-Type: multipart/form-data; boundary=%s" % ready_payload[1])
 
-                if (chunk_size>0):
-                    request_body = _generateChunkBody(chunk_size,ready_payload[0])
+                if chunk_size > 0:
+                    request_body = _generateChunkBody(chunk_size, ready_payload[0])
                     request_headers.append("Transfer-Encoding: chunked")
                 else:
-                    request_body=[]
+                    request_body = []
                     request_headers.append("Content-Length: %d" % len(ready_payload[0]))
 
                     request_body.append(ready_payload[0])
@@ -151,8 +151,8 @@ def generateRequestv3 (method, url, headers=None, cookies = None, params = None,
                 if chunk_size > 0:
 
                     request_headers.append("Transfer-Encoding: chunked")
-                    request_body = _generateChunkBody(chunk_size,ready_payload[0])
-                   
+                    request_body = _generateChunkBody(chunk_size, ready_payload[0])
+
                 else:
                     request_body = []
                     request_headers.append("Content-Length: %d" % len(str(ready_payload[0])))
@@ -169,8 +169,8 @@ def generateRequestv3 (method, url, headers=None, cookies = None, params = None,
                 if chunk_size > 0:
 
                     request_headers.append("Transfer-Encoding: chunked")
-                    request_body = _generateChunkBody(chunk_size,payload)
-                   
+                    request_body = _generateChunkBody(chunk_size, payload)
+
                 else:
                     request_body = []
                     request_headers.append("Content-Length: %d" % len(str(payload)))
@@ -190,13 +190,12 @@ def generateRequestv3 (method, url, headers=None, cookies = None, params = None,
             request_headers.append(request_str % (method.upper(), url, version))
             request_body = ""
 
-    for header,value in headers:
+    for header, value in headers:
         # print (header,value)
         request_headers.append("%s: %s" % (header, value))
 
-    if cookies.getCookies() :    
-        request_headers.append("%s: %s" % ("Cookie",str(cookies)))
-
+    if cookies.getCookies():
+        request_headers.append("%s: %s" % ("Cookie", str(cookies)))
 
     request_headers.append("")
     request_headers.append("")
@@ -204,21 +203,19 @@ def generateRequestv3 (method, url, headers=None, cookies = None, params = None,
     return (request_headers, request_body)
 
 
-def sendRequest(request_obj, host=None, use_ssl=False, sock=None,
-                resp_format=None, use_ipv6=False, raw_request=None,
-                is_chunked=False, doassert=None):
+def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=None, use_ipv6=False, raw_request=None, is_chunked=False, doassert=None):
+
     """
-    Send request passed in first parameter as tuple of HTTPSession headers(list) and request body(str) 
-    
-    
-    @param request: request headers and body
-    @type request: tuple
-    @param host: ip address and port
-    @type host: tuple
-    @param use_ssl: use ssl or not
-    @type use_ssl: boolen
-    @param sock: contains already opened socket
-    @type sock: socket object
+        Send request passed in first parameter as tuple of HTTPSession headers(list) and request body(str) 
+        
+        @param request: request headers and body
+        @type request: tuple
+        @param host: ip address and port
+        @type host: tuple
+        @param use_ssl: use ssl or not
+        @type use_ssl: boolen
+        @param sock: contains already opened socket
+        @type sock: socket object
     """
 
     # print ("01")
@@ -249,46 +246,48 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None,
         else:
             # print ("04")
             if use_ipv6:
-                sock = socket.socket(socket.AF_INET6,socket.SOCK_STREAM)
+                sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
             else:
-                sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-            
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-            #sock.settimeout(60)
+            # sock.settimeout(60)
 
             if use_ssl:
                 # print ("05")
 
                 try:
-                    security_context=ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+                    security_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
                     session = security_context.wrap_socket(sock)
-                 
 
                 except ssl.SSLError as e:
                     if session:
                         session.shutdown(socket.SHUT_RDWR)
-                        session.close()  
+                        session.close()
                         session = None
-                        
-                    return HTTPResponse(headers = [str(e.errno)],payload = [e.strerror],sock = session) 
 
-                #session = ssl.SSLSocket(sock)
+                    return HTTPResponse(headers=[str(e.errno)],
+                                        payload=[e.strerror],
+                                        sock=session)
+
+                # session = ssl.SSLSocket(sock)
             else:
                 # print ("06")
                 session = sock
 
-            #del sock
+            # del sock
             # print ("07")
             try:
                 session.connect(host)
             except OSError as e:
-                return HTTPResponse(headers = [str(e.errno)],payload = [e.strerror],sock = None) 
-    
+                return HTTPResponse(headers=[str(e.errno)],
+                                    payload=[e.strerror], sock=None)
+
         if raw_request:
-            raw_req_len = len (raw_request)
-            
-            len_sent = session.send (raw_request.encode(DEFAULT_REQUEST_ENCODING))
+            raw_req_len = len(raw_request)
+
+            len_sent = session.send(raw_request.encode(DEFAULT_REQUEST_ENCODING))
             if len_sent != raw_req_len:
                     raise socket.error("Not full request headers were send. Drop connection!")
 
@@ -301,31 +300,31 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None,
 
             len_request_h = len(request_h)
 
-            if HEADER_EXPECT100C in request[0] :
+            if HEADER_EXPECT100C in request[0]:
                 # print ("08")
-                len_sent = session.send (request_h)
-                    
-                if len_sent != len_request_h:                
+                len_sent = session.send(request_h)
+
+                if len_sent != len_request_h:
                     raise socket.error("Not full request headers were send. Drop connection!")
                 chunk = session.recv(BUFF_READ_SIZE)
-                
+
                 if chunk == 0:
                     raise socket.error("Remote side send FIN")
 
-                if request[1]:               
+                if request[1]:
                     # print ("09")
                     try:
                         status = chunk.decode().split()[1].strip()
-                        
-                        if int(status) == 100 :
-                            
+
+                        if int(status) == 100:
+
                             request_b = request[1].encode(DEFAULT_REQUEST_ENCODING)
                             len_request_b = len(request_b)
                             len_sent = session.send(request_b)
 
-                            if len_sent != len_request_b:                        
+                            if len_sent != len_request_b:
                                 raise socket.error ("Not full request payload were send. Drop connection!")
-                            
+
                             chunk = session.recv(BUFF_READ_SIZE)
                             if chunk == 0:
                                 raise socket.error("Remote side send FIN")
@@ -336,15 +335,15 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None,
 
                     except IndexError:
                         raise socket.error("Some Network Issue")
-                
+
             else:
                 # print ("010")
                 if request[1]:
                     # print ("010_1")
                     # @todo rewrite for correct chunk send. use _generate chunk function
-                    if ("Transfer-Encoding: chunked" in request[0]):
-                        len_sent = session.send (request_h)
-                    
+                    if "Transfer-Encoding: chunked" in request[0]:
+                        len_sent = session.send(request_h)
+
                         if len_sent != len_request_h:
                             print ("Not full request were send.Drop connection!")
                             raise socket.error ("Not full request were send.Drop connection!")
@@ -540,7 +539,7 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None,
         print ("request interrupted!")
 
 
-def _generateSampleAlphaChars (length):
+def _generateSampleAlphaChars(length):
     """
         Generate random char string exact length
         
@@ -556,11 +555,11 @@ def _generateSampleAlphaChars (length):
         pop = pop_us
     return "".join(sample(pop, length))
 
-def _generateSampleAlphaNumMetaChar (length):
+
+def _generateSampleAlphaNumMetaChar(length):
     """
         Generate random alpha num meta char string exact length
-        
-        
+
         @param length: string length of random string
         @return: random string 
         
@@ -572,20 +571,23 @@ def _generateSampleAlphaNumMetaChar (length):
         pop = pop_us
     return "".join(sample(pop, length))
 
-def _generateMultipartBoundary (length):
+
+def _generateMultipartBoundary(length):
     """
     Generate random boundary for multipart messages
     """
-    
+
     pop_us = "1234567890ABCDEFGHIJKLMNOPQURSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567890"
     if length > len(pop_us):
-        pop= pop_us * (2*int((length/len(pop_us))))
-    else :
+        pop = pop_us * (2 * int((length / len(pop_us))))
+    else:
         pop = pop_us
     return "".join(sample(pop, length))
-    
-def _generateChunkBody(chunk_size,payload):
-    request_body=[]
+
+
+def _generateChunkBody(chunk_size, payload):
+    pass
+
 
 def parseCookie(responseHeaders):
     """
@@ -618,28 +620,27 @@ def parseCookie(responseHeaders):
                 cookie_pair_list.update({n.strip():v.strip()})
     return cookie_pair_list
 
-def _isChunked (responseHeaders):
-    
+
+def _isChunked(responseHeaders):
+
     transferencoding = False
-    
-    
-    try: 
-        for header,value in responseHeaders:
+    try:
+        for header, value in responseHeaders:
             if header == "Transfer-Encoding" and value.lower() == "chunked":
-                transferencoding=True
-                break                
+                transferencoding = True
+                break
             else:
                 continue
     except ValueError:
         for cheader in responseHeaders:
             if cheader.lower().startswith("transfer-encoding"):
-                header,value = cheader.split(":")
+                header, value = cheader.split(":")
                 if value.lower() == "chunked":
-                    transferencoding == True
+                    transferencoding is True
                     break
                 else:
                     continue
-                
+
     return transferencoding
 
 def generateListOfURLS (number, predefined=False,urlftk=0.1):
