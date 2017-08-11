@@ -6,7 +6,7 @@ class HTTPRequest(object):
     """
         Class for HTTP request which will be send
     """
-    __slots__ = ("method", "url", "headers", "cookies", "params", "payload", "chunk_size", "version", "enctype", "repeat", "resp_format", "request", "doassert")
+    __slots__ = ("method", "url", "headers", "cookies", "params", "payload", "chunk_size", "version", "enctype", "repeat", "resp_format", "request", "doassert", "doaction")
 
     def __init__(self,
                  method="GET",
@@ -20,7 +20,8 @@ class HTTPRequest(object):
                  enctype=POST_TYPE_URLENCODED,
                  repeat=1,
                  resp_format="None",
-                 doassert=None):
+                 doassert=None,
+                 doaction=None):
         """
         Constructor for HTTP request.
         @param method:request method
@@ -45,9 +46,9 @@ class HTTPRequest(object):
         self.method = method
         self.url = url
         self.headers = []
-        self.cookies = HTTPCookies(cookies = cookies)
+        self.cookies = HTTPCookies(cookies=cookies)
 
-        if headers: 
+        if headers:
             self.updateRequestHeaders(headers)
         self.params = params
         self.payload = payload
@@ -58,6 +59,7 @@ class HTTPRequest(object):
         self.resp_format = resp_format
         self.request = None
         self.doassert = doassert
+        self.doaction = doaction
 
     def updateRequestHeaders(self, headers=None):
         if not headers:
@@ -122,5 +124,5 @@ class HTTPRequest(object):
         if not self.request:
             self.generateRequest()
         
-        return sendRequest(self.request, host, use_ssl, sock, self.resp_format, use_ipv6, doassert=self.doassert)
+        return sendRequest(self.request, host, use_ssl, sock, self.resp_format, use_ipv6, doassert=self.doassert, doaction=self.doaction)
 

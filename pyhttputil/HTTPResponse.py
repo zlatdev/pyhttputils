@@ -8,11 +8,11 @@ class HTTPResponse(object):
         @self.status : response status
     """
 
-    def __init__(self, headers = None, payload = b"", sock = None, resp_format=None, doassert=None):
+    def __init__(self, headers=None, payload=b"", sock=None, resp_format=None, doassert=None, doaction=None):
         """
             object Constructor
 
-            @param: headers list of headers            
+            @param: headers list of headers
             @payload: bytearray of response body
             @sock: socket.socket of connection
 
@@ -36,6 +36,11 @@ class HTTPResponse(object):
         self.payload = payload
 
         self.doassert = self.checkAssertion(doassert)
+        if doaction:
+            self.callAction(doaction)
+
+    def callAction(self, doaction):
+        doaction(self)
 
     def checkAssertion(self, cond=None):
         if cond:
@@ -65,6 +70,11 @@ class HTTPResponse(object):
             return all(results)
         else:
             return False
+
+    def unchunkPayload(self):
+        payload = self.payload.decode("utf-8")
+        payload = payload.split("\r\n")
+
 
     def __getitem__(self, name):
         if name in self.__dict__:

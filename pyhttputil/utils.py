@@ -203,11 +203,10 @@ def generateRequestv3(method, url, headers=None, cookies=None, params=None, payl
     return (request_headers, request_body)
 
 
-def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=None, use_ipv6=False, raw_request=None, is_chunked=False, doassert=None):
-
+def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=None, use_ipv6=False, raw_request=None, is_chunked=False, doassert=None, doaction=None):
     """
-        Send request passed in first parameter as tuple of HTTPSession headers(list) and request body(str) 
-        
+        Send request passed in first parameter as tuple of HTTPSession headers(list) and request body(str)
+
         @param request: request headers and body
         @type request: tuple
         @param host: ip address and port
@@ -287,7 +286,7 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=No
         if raw_request:
             raw_req_len = len(raw_request)
 
-            len_sent = session.send(raw_request.encode(DEFAULT_REQUEST_ENCODING))
+            len_sent = session.send(raw_request.encode(DEFAULT_REQUEST_ENCODING), errors="replace")
             if len_sent != raw_req_len:
                     raise socket.error("Not full request headers were send. Drop connection!")
 
@@ -295,8 +294,7 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=No
 
         else:
 
-
-            request_h = DEFAULT_HTTP_DELIMETER.join(request[0]).encode(DEFAULT_REQUEST_ENCODING)
+            request_h = DEFAULT_HTTP_DELIMETER.join(request[0]).encode(DEFAULT_REQUEST_ENCODING, errors="replace")
 
             len_request_h = len(request_h)
 
@@ -318,12 +316,12 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=No
 
                         if int(status) == 100:
 
-                            request_b = request[1].encode(DEFAULT_REQUEST_ENCODING)
+                            request_b = request[1].encode(DEFAULT_REQUEST_ENCODING, errors="replace")
                             len_request_b = len(request_b)
                             len_sent = session.send(request_b)
 
                             if len_sent != len_request_b:
-                                raise socket.error ("Not full request payload were send. Drop connection!")
+                                raise socket.error("Not full request payload were send. Drop connection!")
 
                             chunk = session.recv(BUFF_READ_SIZE)
                             if chunk == 0:
@@ -348,7 +346,7 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=No
                             print ("Not full request were send.Drop connection!")
                             raise socket.error ("Not full request were send.Drop connection!")
                         for req_chunk in request[1]:
-                            request_b = DEFAULT_HTTP_DELIMETER.join(req_chunk).encode(DEFAULT_REQUEST_ENCODING)
+                            request_b = DEFAULT_HTTP_DELIMETER.join(req_chunk).encode(DEFAULT_REQUEST_ENCODING, errors="replace")
                             len_request_b = len(request_b)
                             len_sent = session.send (request_b)
                     
@@ -356,7 +354,7 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=No
                                 raise socket.error("Not full request were send. Drop connection!")
                     else:
                         
-                        request_b = request[1][0].encode(DEFAULT_REQUEST_ENCODING)
+                        request_b = request[1][0].encode(DEFAULT_REQUEST_ENCODING, errors="replace")
                         len_request_b = len(request_b)
 
                         len_sent = session.send (request_h+request_b)
@@ -402,7 +400,7 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=No
             while True:
                 # print ("011")
                 try:
-                    (h_chunk, b_chunk) = chunk.split((DEFAULT_HTTP_DELIMETER*2).encode(DEFAULT_REQUEST_ENCODING),1)
+                    (h_chunk, b_chunk) = chunk.split((DEFAULT_HTTP_DELIMETER*2).encode(DEFAULT_REQUEST_ENCODING, errors="replace"),1)
                     # print (chunk,h_chunk,b_chunk)
                     resp_headers += h_chunk
                     resp_body += b_chunk
@@ -479,23 +477,20 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=No
                         break
                     else:
                         # print ("014")
-                        if (len(resp_body) == 0 ):
+                        if len(resp_body) == 0:
                             break
                         b_chunk = session.recv(BUFF_READ_SIZE)
-                        while len(b_chunk)==BUFF_READ_SIZE:
+                        while len(b_chunk) == BUFF_READ_SIZE:
                             resp_body += b_chunk
                             b_chunk = session.recv(BUFF_READ_SIZE)
 
-                            
-                            
                             if len(b_chunk) != BUFF_READ_SIZE:
                                 resp_body += b_chunk
                                 break
                         break
 
+                    # print (resp_body)
 
-                    #print (resp_body)
-                    
                 except ValueError:
                     # print ("015")
                     resp_headers += chunk
@@ -503,30 +498,30 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=No
                     # if chunk == 0:
                     #     raise socket.error("Remote side send FIN")
         else:
-            resp_headers=["No http headers were sent"]
+            resp_headers = ["No http headers were sent"]
             resp_body = chunk
-            connection_close = True       
-        
+            connection_close = True
+
         if connection_close:
             session.shutdown(socket.SHUT_RDWR)
             session.close()
             session = None
-        
+
         if not resp_format:
-            return HTTPResponse(headers=resp_headers, payload=b"", sock=session, doassert=doassert)
+            return HTTPResponse(headers=resp_headers, payload=b"", sock=session, doassert=doassert, doaction=doaction)
         elif "body" in resp_format:
-            return HTTPResponse(headers = resp_headers, payload = resp_body,sock = session, doassert=doassert)   
+            return HTTPResponse(headers=resp_headers, payload=resp_body, sock=session, doassert=doassert, doaction=doaction)
         elif "all" in resp_format:
-            return HTTPResponse(headers = resp_headers, payload = resp_body,sock = session, doassert=doassert)
+            return HTTPResponse(headers=resp_headers, payload=resp_body, sock=session, doassert=doassert, doaction=doaction)
         elif "headers" in resp_format:
-            return HTTPResponse(headers = resp_headers, payload = b"",sock = session, doassert=doassert)
+            return HTTPResponse(headers=resp_headers, payload=b"", sock=session, doassert=doassert, doaction=doaction)
         elif "status" in resp_format:
-            return HTTPResponse(headers = resp_headers, payload = b"",sock = session, doassert=doassert)
+            return HTTPResponse(headers=resp_headers, payload=b"", sock=session, doassert=doassert, doaction=doaction)
         else:
-            return HTTPResponse(headers = resp_headers, payload = b"",sock = session, doassert=doassert)
+            return HTTPResponse(headers=resp_headers, payload=b"", sock=session, doassert=doassert, doaction=doaction)
 
         del resp_headers
-        del resp_body 
+        del resp_body
 
     except socket.error as e:
         # print ("016")
@@ -748,36 +743,38 @@ def generateURLEncodedPayload (data, not_urlenc = False):
     else:
         return ""
 
-def generateMultipartPayload (data):
+
+def generateMultipartPayload(data):
     """
     Generate multipart body message
-    
+
     """
 
     multipartdata = []
     boundary = _generateMultipartBoundary(70)
-    
+
     if "files" in data:
         multipartdata.extend(_generateMultipartFile(data["files"], boundary))
         del data["files"]
 
-    for name,value in data.items(): 
-            multipartdata.append("--%s" % boundary )
-            multipartdata.append ("Content-Disposition: form-data; name=\"%s\"" % name)
-            multipartdata.append ("")
-            multipartdata.append (value)
+    for name, value in data.items():
+            multipartdata.append("--%s" % boundary)
+            multipartdata.append("Content-Disposition: form-data; name=\"%s\"" % name)
+            multipartdata.append("")
+            multipartdata.append(value)
     multipartdata.append("--%s--" % boundary)
 
-    return (DEFAULT_HTTP_DELIMETER.join(multipartdata),boundary)
+    return (DEFAULT_HTTP_DELIMETER.join(multipartdata), boundary)
 
-def _generateMultipartFile (files, boundary):
+
+def _generateMultipartFile(files, boundary):
     """
         Generate multipart part of file upload
     """
 
     multipartdata = []
     for name, filedata in files.items():
-        if filedata.setdefault("filename","").startswith("@"):
+        if filedata.setdefault("filename", "").startswith("@"):
             fp = open(filedata["filename"][1:], "r")
             content = fp.read()
             fp.close

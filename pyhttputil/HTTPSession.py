@@ -263,19 +263,19 @@ class HTTPSession(object):
                     # for cookie in 
                     # print (self.request.headers["Cookie"])
 
-                if self.doassert:
-                    print(self.response.doassert)
-                print_resp = self.request.resp_format.lower()
-                if "status" in print_resp:
-                    print(self.response.status)
-                if "headers" in print_resp:
-                    print(self.response.headers)
-                if "body" in print_resp:
-                    print(self.response.payload)
-                if "all" in print_resp:
-                    print(self.response.status)
-                    print(self.response.headers)
-                    print(self.response.payload)
+                    if self.doassert:
+                        print(self.response.doassert)
+                    print_resp = self.request.resp_format.lower()
+                    if "status" in print_resp:
+                        print(self.response.status)
+                    if "headers" in print_resp:
+                        print(self.response.headers)
+                    if "body" in print_resp:
+                        print(self.response.payload)
+                    if "all" in print_resp:
+                        print(self.response.status)
+                        print(self.response.headers)
+                        print(self.response.payload)
 
                 self.request.headers = req_headers
                 self.request.cookies = HTTPCookies(cookies=req_cookie)
@@ -297,7 +297,7 @@ class HTTPSession(object):
     def runAllInOneSession (self, host = None, secure=False, delay=0, session_headers = None, prefix_url=None, resp_format=None, version=None, *args, **kwargs):
         '''
         Run All requests in one session. Send each request from self.session list. Session cookies are not removed between session 
-        
+
         @param delay:delay in seconds between requests
         @type delay:float
         @type self.request:HTTPRequest
@@ -361,11 +361,7 @@ class HTTPSession(object):
                     old_version = self.request.version
                     self.request.version=version
                     
-                if self.debug:
-                    print (self.request.generateRawRequest())
-                    # if self.session_cookies.cookies:
-                    #     for cookie in 
-                    #     print (self.request.headers["Cookie"])
+                
                 # print (1)
                 if self.sock:
                     self.response = self.request.getResponse(sock=self.sock)
@@ -380,22 +376,26 @@ class HTTPSession(object):
                 
                 self.session_cookies.updateCookies(self.response.headers)
                 
+                if self.debug:
+                    print(self.request.generateRawRequest())
+                    # if self.session_cookies.cookies:
+                    #     for cookie in
+                    #     print (self.request.headers["Cookie"])
+                    print_resp = self.request.resp_format.lower()
+                    if "status" in print_resp:
+                        print(self.response.status)
+                    if "headers" in print_resp:
+                        print(self.response.headers)
+                    if "body" in print_resp:
+                        print(self.response.payload)
+                    if "all" in print_resp:
+                        print(self.response.status)
+                        print(self.response.headers)
+                        print(self.response.payload)
 
-                print_resp = self.request.resp_format.lower()
-                if "status" in print_resp:
-                    print (self.response.status)
-                if "headers" in print_resp:
-                    print (self.response.headers)
-                if "body" in print_resp:
-                    print (self.response.payload)
-                if "all" in print_resp:
-                    print (self.response.status)
-                    print (self.response.headers)
-                    print (self.response.payload)
-                
                 self.request.headers = req_headers
                 # self.request.headers["Cookie"] = req_cookie
-                
+
                 if prefix_url:
                     self.request.url = url
                 if resp_format:
