@@ -90,7 +90,7 @@ class HTTPRequest(object):
         if self.request[1]:
 
             body_payload = ""
-            if len(self.request[1]) >1:
+            if len(self.request[1]) > 1:
                 for chunk in self.request[1]:
                     body_payload += DEFAULT_HTTP_DELIMETER.join(chunk)
             else:

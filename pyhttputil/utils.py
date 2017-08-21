@@ -119,17 +119,21 @@ def generateRequestv3(method, url, headers=None, cookies=None, params=None, payl
     elif (method.lower().strip() == "post"):
 
         if ready_payload:
+            request_body = []
 
             if post_type == POST_TYPE_URLENCODED:
 
                 request_headers.append("Content-Type: application/x-www-form-urlencoded")
 
                 if chunk_size > 0:
+                    # print(ready_payload[0])
                     request_headers.append("Transfer-Encoding: chunked")
                     request_body = _generateChunkBody(chunk_size, ready_payload[0])
+                    # print(request_body)
+                    # raise Exception
 
                 else:
-                    request_body = []
+
                     request_headers.append("Content-Length: %d" % len(ready_payload[0]))
                     request_body.append(ready_payload[0])
 
@@ -138,10 +142,13 @@ def generateRequestv3(method, url, headers=None, cookies=None, params=None, payl
                 request_headers.append("Content-Type: multipart/form-data; boundary=%s" % ready_payload[1])
 
                 if chunk_size > 0:
-                    request_body = _generateChunkBody(chunk_size, ready_payload[0])
+                    # print(ready_payload[0])
                     request_headers.append("Transfer-Encoding: chunked")
+                    request_body = _generateChunkBody(chunk_size, ready_payload[0])
+                    # print(request_body)
+                    # raise Exception
                 else:
-                    request_body = []
+
                     request_headers.append("Content-Length: %d" % len(ready_payload[0]))
 
                     request_body.append(ready_payload[0])
@@ -154,7 +161,7 @@ def generateRequestv3(method, url, headers=None, cookies=None, params=None, payl
                     request_body = _generateChunkBody(chunk_size, ready_payload[0])
 
                 else:
-                    request_body = []
+                    
                     request_headers.append("Content-Length: %d" % len(str(ready_payload[0])))
                     request_body.append(ready_payload[0])
 
@@ -343,24 +350,26 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=No
                         len_sent = session.send(request_h)
 
                         if len_sent != len_request_h:
-                            print ("Not full request were send.Drop connection!")
-                            raise socket.error ("Not full request were send.Drop connection!")
+                            print("Not full request were send.Drop connection!")
+                            raise socket.error("Not full request were send.Drop connection!")
                         for req_chunk in request[1]:
+                            # print(req_chunk)
                             request_b = DEFAULT_HTTP_DELIMETER.join(req_chunk).encode(DEFAULT_REQUEST_ENCODING, errors="replace")
+                            # print(request_b)
                             len_request_b = len(request_b)
-                            len_sent = session.send (request_b)
-                    
+                            len_sent = session.send(request_b)
+
                             if len_sent != len_request_b:
                                 raise socket.error("Not full request were send. Drop connection!")
                     else:
-                        
+
                         request_b = request[1][0].encode(DEFAULT_REQUEST_ENCODING, errors="replace")
                         len_request_b = len(request_b)
 
-                        len_sent = session.send (request_h+request_b)
-                    
-                        if len_sent != len_request_b+len_request_h:
-                        
+                        len_sent = session.send(request_h + request_b)
+
+                        if len_sent != len_request_b + len_request_h:
+
                             raise socket.error("Not full request were send. Drop connection!")
 
 
@@ -396,19 +405,19 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=No
 
         protocol = chunk[0:5]
         if protocol == b"HTTP/":
-            
+
             while True:
                 # print ("011")
                 try:
-                    (h_chunk, b_chunk) = chunk.split((DEFAULT_HTTP_DELIMETER*2).encode(DEFAULT_REQUEST_ENCODING, errors="replace"),1)
+                    (h_chunk, b_chunk) = chunk.split((DEFAULT_HTTP_DELIMETER * 2).encode(DEFAULT_REQUEST_ENCODING, errors="replace"), 1)
                     # print (chunk,h_chunk,b_chunk)
                     resp_headers += h_chunk
                     resp_body += b_chunk
                     # print (type(resp_headers))
                     resp_headers = resp_headers.decode("utf-8").splitlines()
-        
+
                     for c_header in resp_headers:
-                        #print (c_header)
+                        # print (c_header)
                         if c_header.lower().startswith(HEADER_TRANSFER_ENCODING):
                             c_value = c_header[c_header.index(":")+1:].strip()
                             if c_value.lower() == "chunked":
@@ -527,11 +536,11 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=No
         # print ("016")
 
         if session:
-            session.close()  
-            session = None          
-        return HTTPResponse(headers = [str(e.errno)],payload = [e.strerror],sock = session)
+            session.close()
+            session = None
+        return HTTPResponse(headers=[str(e.errno)], payload=[e.strerror], sock=session)
     except KeyboardInterrupt:
-        print ("request interrupted!")
+        print("request interrupted!")
 
 
 def _generateSampleAlphaChars(length):
@@ -581,7 +590,22 @@ def _generateMultipartBoundary(length):
 
 
 def _generateChunkBody(chunk_size, payload):
-    pass
+
+    request_body = []
+    f = StringIO(payload)
+
+    chunk = f.read(chunk_size)
+
+    while len(chunk) > 0:
+        request_body.append([str(hex(len(chunk)))[2:], chunk + DEFAULT_HTTP_DELIMETER])
+        # request_body.append(chunk)
+        chunk = f.read(chunk_size)
+    else:
+        request_body.append(["0", "", ""])
+        # request_body.append("")
+        # request_body.append("")
+
+    return request_body
 
 
 def parseCookie(responseHeaders):
