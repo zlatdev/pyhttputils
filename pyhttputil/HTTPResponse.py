@@ -6,6 +6,8 @@ class HTTPResponse(object):
         Class for http response
 
         @self.status : response status
+
+        @todo add callable for doaction, doassert
     """
 
     def __init__(self, headers=None, payload=b"", sock=None, resp_format=None, doassert=None, doaction=None):
@@ -36,6 +38,7 @@ class HTTPResponse(object):
         self.payload = payload
 
         self.doassert = self.checkAssertion(doassert)
+
         if doaction:
             self.callAction(doaction)
 
@@ -48,6 +51,7 @@ class HTTPResponse(object):
             for assert_item in cond.items():
                 try:
                     key, value = assert_item
+
                     if key == "payload":
                         assert value.encode() in self[key]
                         results.append(True)
@@ -62,9 +66,11 @@ class HTTPResponse(object):
                                 continue
                         else:
                             results.append(False)
+
                     if key == "status":
                         assert value in self[key]
                         results.append(True)
+
                 except AssertionError:
                     results.append(False)
             return all(results)

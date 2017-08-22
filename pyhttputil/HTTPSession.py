@@ -245,7 +245,7 @@ class HTTPSession(object):
                     self.response = self.request.getResponse(sock=self.sock)
                 else:
                     self.response = self.request.getResponse(host=self.host,
-                                                        use_ssl=self.secure, 
+                                                        use_ssl=self.secure,
                                                         use_ipv6 = self.ipv6)
                 # print (self.response.status)                    
 
@@ -256,15 +256,15 @@ class HTTPSession(object):
                 # update cookie from response headers
                 self.session_cookies.updateCookies(self.response.headers)
 
+                if self.doassert:
+                    print("doassert: {}".format(self.response.doassert))
+
                 # print (self.debug)
                 if self.debug:
                     print(self.request.generateRawRequest())
                     # if self.session_cookies.cookies:
                     # for cookie in 
                     # print (self.request.headers["Cookie"])
-
-                    if self.doassert:
-                        print(self.response.doassert)
                     print_resp = self.request.resp_format.lower()
                     if "status" in print_resp:
                         print(self.response.status)

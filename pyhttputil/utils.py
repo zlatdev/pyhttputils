@@ -6,7 +6,6 @@ from copy import deepcopy
 from .HTTPResponse import *
 
 
-
 import socket
 import ssl
 # import threading
@@ -419,7 +418,7 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=No
                     for c_header in resp_headers:
                         # print (c_header)
                         if c_header.lower().startswith(HEADER_TRANSFER_ENCODING):
-                            c_value = c_header[c_header.index(":")+1:].strip()
+                            c_value = c_header[c_header.index(":") + 1:].strip()
                             if c_value.lower() == "chunked":
                                 is_chunked=True
                             else:
