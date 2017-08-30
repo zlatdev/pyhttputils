@@ -19,7 +19,7 @@ class HTTPRequest(object):
                  version="HTTP/1.1",
                  enctype=POST_TYPE_URLENCODED,
                  repeat=1,
-                 resp_format="None",
+                 resp_format=None,
                  doassert=None,
                  doaction=None):
         """
@@ -68,9 +68,11 @@ class HTTPRequest(object):
         if "Cookie" in headers:
             self.cookies.setCookies(cookies=headers["Cookie"])
             del headers["Cookie"]
-
+        # print(3, headers)
         for header, value in headers.items():
+            # print(3, header, value)
             self.headers.append((header, value))
+        # print(3, self.headers)
 
     def generateRequest(self):
         """
@@ -100,17 +102,10 @@ class HTTPRequest(object):
         else:
             return request_h.encode() + b""
 
-    def generateSessionRequest(self):
-        """
-        Generate request to use in in session
-        """
-        
-        return (self, self.repeat, self.resp_format, self.doassert)
-
-    def getResponse(self,host=None, use_ssl=False, sock=None, use_ipv6=False, resp_format=None):
+    def getResponse(self, host=None, use_ssl=False, sock=None, use_ipv6=False, resp_format=None):
         """
         Send request and get response and return response object
-        
+
         @param host: tuple of host ("ip",port)
         @type host:tuple
         @param use_ssl:use ssl connection or not
@@ -118,11 +113,11 @@ class HTTPRequest(object):
         @param sock:socket object if already was opened
         @type sock:socket
         """
+
         if resp_format:
             self.resp_format = resp_format
-        
-        if not self.request:
-            self.generateRequest()
-        
+
+        # if not self.request:
+        self.generateRequest()
         return sendRequest(self.request, host, use_ssl, sock, self.resp_format, use_ipv6, doassert=self.doassert, doaction=self.doaction)
 

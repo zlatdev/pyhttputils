@@ -197,9 +197,9 @@ def generateRequestv3(method, url, headers=None, cookies=None, params=None, payl
             request_body = ""
 
     for header, value in headers:
-        # print (header,value)
+        # print(2, header, value)
         request_headers.append("%s: %s" % (header, value))
-
+    # print(2.1, request_headers)
     if cookies.getCookies():
         request_headers.append("%s: %s" % ("Cookie", str(cookies)))
 
@@ -209,7 +209,7 @@ def generateRequestv3(method, url, headers=None, cookies=None, params=None, payl
     return (request_headers, request_body)
 
 
-def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=None, use_ipv6=False, raw_request=None, is_chunked=False, doassert=None, doaction=None):
+def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=None, use_ipv6=False, raw_request=None, is_chunked=False, doassert=None, doaction=None, bind_source=None):
     """
         Send request passed in first parameter as tuple of HTTPSession headers(list) and request body(str)
 
@@ -515,18 +515,19 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=No
             session.close()
             session = None
 
-        if not resp_format:
-            return HTTPResponse(headers=resp_headers, payload=b"", sock=session, doassert=doassert, doaction=doaction)
-        elif "body" in resp_format:
-            return HTTPResponse(headers=resp_headers, payload=resp_body, sock=session, doassert=doassert, doaction=doaction)
-        elif "all" in resp_format:
-            return HTTPResponse(headers=resp_headers, payload=resp_body, sock=session, doassert=doassert, doaction=doaction)
-        elif "headers" in resp_format:
-            return HTTPResponse(headers=resp_headers, payload=b"", sock=session, doassert=doassert, doaction=doaction)
-        elif "status" in resp_format:
-            return HTTPResponse(headers=resp_headers, payload=b"", sock=session, doassert=doassert, doaction=doaction)
-        else:
-            return HTTPResponse(headers=resp_headers, payload=b"", sock=session, doassert=doassert, doaction=doaction)
+        return HTTPResponse(headers=resp_headers, payload=resp_body, sock=session, doassert=doassert, doaction=doaction)
+
+        # if not resp_format:
+        #     return HTTPResponse(headers=resp_headers, payload=b"", sock=session, doassert=doassert, doaction=doaction)
+        # elif "body" in resp_format:
+        #     return HTTPResponse(headers=resp_headers, payload=resp_body, sock=session, doassert=doassert, doaction=doaction)
+        # elif "all" in resp_format:
+        # elif "headers" in resp_format:
+        #     return HTTPResponse(headers=resp_headers, payload=b"", sock=session, doassert=doassert, doaction=doaction)
+        # elif "status" in resp_format:
+        #     return HTTPResponse(headers=resp_headers, payload=b"", sock=session, doassert=doassert, doaction=doaction)
+        # else:
+        #     return HTTPResponse(headers=resp_headers, payload=b"", sock=session, doassert=doassert, doaction=doaction)
 
         del resp_headers
         del resp_body

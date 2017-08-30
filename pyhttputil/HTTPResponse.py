@@ -10,7 +10,7 @@ class HTTPResponse(object):
         @todo add callable for doaction, doassert
     """
 
-    def __init__(self, headers=None, payload=b"", sock=None, resp_format=None, doassert=None, doaction=None):
+    def __init__(self, headers=None, payload=b"", sock=None, doassert=None, doaction=None):
         """
             object Constructor
 

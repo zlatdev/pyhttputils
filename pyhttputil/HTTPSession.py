@@ -155,7 +155,7 @@ class HTTPSession(object):
         else:
             raise Exception("Invalid request object")
 
-    def runSessionv3(self, host=None, secure=False, delay=False,
+    def runSession(self, host=None, secure=False, delay=False,
                      session_headers=None, session_cookies=None,
                      prefix_url="", resp_format=None, version=None,
                      debug=False, *args, **kwargs):
@@ -195,8 +195,11 @@ class HTTPSession(object):
         if debug:
             self.debug = True
 
+        # print(1, self.session_headers)
         if session_headers:
+            # print(1, session_headers)
             self.session_headers.update(session_headers)
+        # print(1, self.session_headers)
 
         if session_cookies:
             self.session_cookies.setCookies(cookies=session_cookies)
@@ -212,6 +215,7 @@ class HTTPSession(object):
 
                 # update request header and cookie according new session headers
                 if self.session_headers:
+                    # print(1, self.session_headers)
                     self.request.updateRequestHeaders(self.session_headers)
 
                 # update cookie which was recieved from response and saved
@@ -248,7 +252,7 @@ class HTTPSession(object):
                                                         use_ssl=self.secure,
                                                         use_ipv6 = self.ipv6)
                 # print (self.response.status)                    
-
+                
                 if self.response.sock:
                     self.sock = self.response.sock
                 else:
@@ -277,7 +281,7 @@ class HTTPSession(object):
                         print(self.response.headers)
                         print(self.response.payload)
 
-                self.request.headers = req_headers
+                self.request.headers = req_headers[:]
                 self.request.cookies = HTTPCookies(cookies=req_cookie)
 
                 # self.request.headers["Cookie"] = req_cookie
@@ -416,24 +420,21 @@ class HTTPSession(object):
         """
         # print (2)
 
-
         if session_flow:
             self.session = []
-        if self.sock:            
+        if self.sock:
             self.sock.shutdown(socket.SHUT_RDWR)
             self.sock.close()
-            self.sock=None
-            self.secure=False
+            self.sock = None
+            self.secure = False
         else:
-            self.sock=None
-            self.secure=False
-        
-        self.request=None
-        self.response=None      
-        if not one_session:  
-            self.session_cookies=HTTPCookies()
+            self.sock = None
+            self.secure = False
 
-    
+        self.request = None
+        self.response = None
+        if not one_session:
+            self.session_cookies = HTTPCookies()
 
     def getHTTPSessionRawRequests (self,filename=None,session_headers=None):
         if not filename:
