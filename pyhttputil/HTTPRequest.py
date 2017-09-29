@@ -79,7 +79,15 @@ class HTTPRequest(object):
         Generate request for single use
         """
 
-        self.request = generateRequestv3(self.method, self.url, self.headers, self.cookies, self.params, self.payload, self.chunk_size, self.version, self.enctype)
+        self.request = generateRequestv3(method=self.method,
+                                         url=self.url,
+                                         headers=self.headers,
+                                         cookies=self.cookies,
+                                         params=self.params,
+                                         payload=self.payload,
+                                         chunk_size=self.chunk_size,
+                                         version=self.version,
+                                         post_type=self.enctype)
 
     def generateRawRequest(self):
 
@@ -102,7 +110,7 @@ class HTTPRequest(object):
         else:
             return request_h.encode() + b""
 
-    def getResponse(self, host=None, use_ssl=False, sock=None, use_ipv6=False, resp_format=None):
+    def getResponse(self, host=None, use_ssl=False, sock=None, use_ipv6=False, resp_format=None, bind_source=None, doassert=None, doaction=None):
         """
         Send request and get response and return response object
 
@@ -116,8 +124,18 @@ class HTTPRequest(object):
 
         if resp_format:
             self.resp_format = resp_format
+        if doaction:
+            self.doaction = doaction
+        if doassert:
+            self.doassert = doassert
 
         # if not self.request:
         self.generateRequest()
-        return sendRequest(self.request, host, use_ssl, sock, self.resp_format, use_ipv6, doassert=self.doassert, doaction=self.doaction)
 
+        return sendRequest(request_obj=self.request,
+                           host=host, use_ssl=use_ssl, sock=sock, use_ipv6=use_ipv6, bind_source=bind_source,
+                           resp_format=self.resp_format, doassert=self.doassert, doaction=self.doaction)
+
+    def __str__(self):
+        self.generateRequest()
+        return str(self.request)

@@ -184,7 +184,7 @@ def generateRequestv3(method, url, headers=None, cookies=None, params=None, payl
 
         else:
             request_body = []
-            #request.append("Content-Type : application/x-www-form-urlencoded")
+            # request.append("Content-Type : application/x-www-form-urlencoded")
             request_headers.append("Content-Length: 0")
 
     else:
@@ -258,6 +258,8 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=No
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
             # sock.settimeout(60)
+            if bind_source:
+                sock.bind(bind_source)
 
             if use_ssl:
                 # print ("05")
@@ -751,14 +753,15 @@ def mapParameterValue(listParam, listValue):
             datadict [param] = listValue[randint(0,len(listValue)-1)]        
     
     return datadict
-   
-def generateURLEncodedPayload (data, not_urlenc = False):
-    if isinstance(data,dict):
+
+
+def generateURLEncodedPayload(data, not_urlenc=False):
+    if isinstance(data, dict):
         if not_urlenc:
-            qs =""
-            for key,value in data.items():
-                qs += "%s=%s&" % (key,value)
-            return qs[:len(qs)-1]
+            qs = ""
+            for key, value in data.items():
+                qs += "%s=%s&" % (key, value)
+            return qs[:len(qs) - 1]
 
         else:
             return urlencode(data)
@@ -777,11 +780,11 @@ def generateMultipartPayload(data):
     multipartdata = []
     boundary = _generateMultipartBoundary(70)
 
-    if "files" in data:
-        multipartdata.extend(_generateMultipartFile(data["files"], boundary))
-        del data["files"]
-
     for name, value in data.items():
+        if name is "files":
+                multipartdata.extend(_generateMultipartFile(data[name], boundary))
+                # del data["files"]
+        else:
             multipartdata.append("--%s" % boundary)
             multipartdata.append("Content-Disposition: form-data; name=\"%s\"" % name)
             multipartdata.append("")

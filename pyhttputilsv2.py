@@ -659,6 +659,7 @@ def generateRequestv2 (method, url, headers=None, payload=None, chunk_size=0,ver
 
     return (request_headers, request_body)
 
+
 def generateRequestv3 (method, url, headers=None, cookies = None, params = None, payload=None, chunk_size=0,version="HTTP/1.1",post_type=POST_TYPE_URLENCODED):
     """
     Function generate request from parameters
@@ -828,13 +829,12 @@ def generateRequestv3 (method, url, headers=None, cookies = None, params = None,
 
     return (request_headers, request_body)
 
+
 def sendRequest(request_obj, host=None, use_ssl=False, sock=None,
-                resp_format=None, use_ipv6=False, raw_request=None,
-                is_chunked=False, doassert=None):
+                    resp_format=None, use_ipv6=False, raw_request=None,
+                    is_chunked=False, doassert=None):
     """
     Send request passed in first parameter as tuple of HTTPSession headers(list) and request body(str) 
-    
-    
     @param request: request headers and body
     @type request: tuple
     @param host: ip address and port
@@ -843,12 +843,7 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None,
     @type use_ssl: boolen
     @param sock: contains already opened socket
     @type sock: socket object
-    
-    
     """
-    
-    # print ("01")
-
 
     resp_headers = bytearray()
     resp_body =    bytearray()
@@ -2489,7 +2484,7 @@ class HTTPClientsPools(object):
 
 class HTTPClientsTraffic(object):
     def __init__(self, sessions_list,*args, **kwargs):
-        self.sessions = sessions_list             
+        self.sessions = sessions_list
         
     def run(self):
         for session in self.sessions:

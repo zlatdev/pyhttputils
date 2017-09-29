@@ -13,7 +13,7 @@ class HTTPSession(object):
     __slots__ = ("debug", "request", "session_cookies", "sock",
                  "response", "session", "host", "secure", "session_headers",
                  "session_cookies", "prefix_url", "resp_format",
-                 "session_http_version", "ipv6", "delay","doassert")
+                 "session_http_version", "ipv6", "delay", "doassert", "bind")
 
     def __init__(self, host=None, secure=False, request=None, flow=None,
                  session_headers=None, session_cookies=None,
@@ -174,6 +174,14 @@ class HTTPSession(object):
         except KeyError:
             self.doassert = False
 
+        try:
+            if kwargs["bind_source"]:
+                self.bind = kwargs["bind_source"]
+            else:
+                self.bind = None
+        except KeyError:
+            self.bind = None
+
         if host:
             self.host = host
         if secure:
@@ -207,6 +215,7 @@ class HTTPSession(object):
         self.prefix_url = prefix_url + self.prefix_url
 
         for self.request in self.session:
+
             for i in range(0, self.request.repeat):
                 # save original headers and cookies
                 req_cookie = self.request.cookies.getCookies().copy()
@@ -250,9 +259,10 @@ class HTTPSession(object):
                 else:
                     self.response = self.request.getResponse(host=self.host,
                                                         use_ssl=self.secure,
-                                                        use_ipv6 = self.ipv6)
-                # print (self.response.status)                    
-                
+                                                        use_ipv6=self.ipv6,
+                                                        bind_source=self.bind)
+                # print (self.response.status)
+
                 if self.response.sock:
                     self.sock = self.response.sock
                 else:
@@ -267,7 +277,7 @@ class HTTPSession(object):
                 if self.debug:
                     print(self.request.generateRawRequest())
                     # if self.session_cookies.cookies:
-                    # for cookie in 
+                    # for cookie in
                     # print (self.request.headers["Cookie"])
                     print_resp = self.request.resp_format.lower()
                     if "status" in print_resp:
