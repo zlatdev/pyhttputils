@@ -287,6 +287,11 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=No
             # print ("07")
             try:
                 session.connect(host)
+                print(session.getpeercert())
+                print(session.cipher())
+                print(session.ciphers())
+                print(session.selected_alpn_protocol())
+                print(session.selected_npn_protocol())
             except OSError as e:
                 return HTTPResponse(headers=[str(e.errno)],
                                     payload=[e.strerror], sock=None)
@@ -492,11 +497,7 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=No
             resp_body = chunk
             connection_close = True
 
-        print(session.getpeercert())
-        print(session.cipher())
-        print(session.ciphers())
-        print(session.selected_alpn_protocol())
-        print(session.selected_npn_protocol())
+
         if connection_close:
             session.shutdown(socket.SHUT_RDWR)
             session.close()
