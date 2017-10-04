@@ -241,14 +241,14 @@ sessions = [
     #                             },
     #     "bind_source": ("172.29.70.249", 0)
     # },
-    # {
-    #     "host": ("172.29.70.13", 80),
-    #     "session_headers": {
-    #                             "Host": "clusteras.tomsk.test",
-    #                             "Connection": "keep-alive",
-    #                             },
-    #     "bind_source": ("172.29.70.253", 0)
-    # },
+    {
+        "host": ("172.29.70.13", 80),
+        "session_headers": {
+                                "Host": "clusteras.tomsk.test",
+                                "Connection": "keep-alive",
+                                },
+        "bind_source": ("172.29.70.253", 0)
+    },
     # {
     #     "host": ("172.29.70.14", 80),
     #     "session_headers": {
@@ -329,14 +329,14 @@ sessions = [
     #                             },
     #     # "bind_source": ("172.29.70.249", 0)
     # },
-    {
-        "host": ("10.2.208.146", 80),
-        "session_headers": {
-                                "Host": "clusteraa2.tmsk.test",
-                                "Connection": "keep-alive",
-                                },
-        "bind_source": ("172.29.70.249", 0)
-    },
+    # {
+    #     "host": ("10.2.208.146", 80),
+    #     "session_headers": {
+    #                             "Host": "clusteraa2.tmsk.test",
+    #                             "Connection": "keep-alive",
+    #                             },
+    #     "bind_source": ("172.29.70.249", 0)
+    # },
 
 ]
 

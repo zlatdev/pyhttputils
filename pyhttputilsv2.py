@@ -2638,15 +2638,15 @@ def HTTPcurrentClient():
 
 def GetCMDParameters():
     parser = argparse.ArgumentParser(description="Generate traffic for host")
-    parser.add_argument("host",type=str, help="ip address of server")
-    parser.add_argument("port",type=str, help="port of server")
-    parser.add_argument("-t","--duration" , type=str, help="time in second during sending traffic")
-    parser.add_argument("-p","--process" , type=str, help="number of process which generate traffic")
-    parser.add_argument("-c","--clients" , type=str, help="number of clients per process")
-    parser.add_argument("-d","--delay" , type=str, help="delay between requests")
-    parser.add_argument("-n","--domain" , type=str, help="hostname")
-    parser.add_argument("-s","--ssl",type=str,help="Use ssl connection")
-    #parse cli arguments as list of values
+    parser.add_argument("host", type=str, help="ip address of server")
+    parser.add_argument("port", type=str, help="port of server")
+    parser.add_argument("-t", "--duration", type=str, help="time in second during sending traffic")
+    parser.add_argument("-p", "--process", type=str, help="number of process which generate traffic")
+    parser.add_argument("-c", "--clients", type=str, help="number of clients per process")
+    parser.add_argument("-d", "--delay", type=str, help="delay between requests")
+    parser.add_argument("-n", "--domain", type=str, help="hostname")
+    parser.add_argument("-s", "--ssl", type=str, help="Use ssl connection")
+    # parse cli arguments as list of values
     return vars(parser.parse_args())
 
 

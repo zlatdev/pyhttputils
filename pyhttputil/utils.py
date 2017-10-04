@@ -373,36 +373,17 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=No
 
                             raise socket.error("Not full request were send. Drop connection!")
 
-
-
-
-
-
-                    # request_b = request[1].encode(DEFAULT_REQUEST_ENCODING)
-                    # len_request_b = len(request_b)
-
-                    # len_sent = session.send (request_h+request_b)
-                    
-                    # if len_sent != len_request_b+len_request_h:
-                        
-                    #     raise socket.error("Not full request were send. Drop connection!")
-                    
                 else:
                     # print ("010_2")
-                    len_sent = session.send (request_h)
-                    
+                    len_sent = session.send(request_h)
+
                     if len_sent != len_request_h:
-                        print ("Not full request were send.Drop connection!")
+                        print("Not full request were send.Drop connection!")
                         raise socket.error
                 # print ("010_3")
                 chunk = session.recv(BUFF_READ_SIZE)
-                # print ("010_4")                        
-                    
-
-        #read response
-        
-                
-        # session.settimeout(60.0)
+                # print ("010_4")
+        # read response
 
         protocol = chunk[0:5]
         if protocol == b"HTTP/":
@@ -422,15 +403,15 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=No
                         if c_header.lower().startswith(HEADER_TRANSFER_ENCODING):
                             c_value = c_header[c_header.index(":") + 1:].strip()
                             if c_value.lower() == "chunked":
-                                is_chunked=True
+                                is_chunked = True
                             else:
-                                is_chunked=False
-                            
+                                is_chunked = False
+
                         elif c_header.lower().startswith(HEADER_CONTENT_LENGTH):
 
-                            content_length = int(c_header[c_header.index(":")+1:].strip())
+                            content_length = int(c_header[c_header.index(":") + 1:].strip())
                             # print (content_length, c_header)
-                            
+
                         elif c_header.lower().strip() == HEADER_CONNECTION_CLOSE.lower():
                                 connection_close = True
                         else:
@@ -461,8 +442,7 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=No
                             # print (len(resp_body), content_length)
                             # print (resp_body)
 
-
-                            b_chunk =  session.recv(BUFF_READ_SIZE)
+                            b_chunk = session.recv(BUFF_READ_SIZE)
                             
                             # print ("013_2")
                             # print (len(resp_body), content_length)
@@ -512,6 +492,11 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=No
             resp_body = chunk
             connection_close = True
 
+        print(session.getpeercert())
+        print(session.cipher())
+        print(session.ciphers())
+        print(session.selected_alpn_protocol())
+        print(session.selected_npn_protocol())
         if connection_close:
             session.shutdown(socket.SHUT_RDWR)
             session.close()
@@ -819,3 +804,17 @@ def _generateMultipartFile(files, boundary):
             multipartdata.append(filedata.get("filecontent", ""))
 
     return multipartdata
+
+
+def GetCMDParameters():
+    parser = argparse.ArgumentParser(description="Generate traffic for host")
+    parser.add_argument("host",type=str, help="ip address of server")
+    parser.add_argument("port",type=str, help="port of server")
+    # parser.add_argument("-t","--duration" , type=str, help="time in second during sending traffic")
+    # parser.add_argument("-p","--process" , type=str, help="number of process which generate traffic")
+    # parser.add_argument("-c","--clients" , type=str, help="number of clients per process")
+    # parser.add_argument("-d","--delay" , type=str, help="delay between requests")
+    # parser.add_argument("-n","--domain" , type=str, help="hostname")
+    # parser.add_argument("-s","--ssl",type=str,help="Use ssl connection")
+    #parse cli arguments as list of values
+    return vars(parser.parse_args())
