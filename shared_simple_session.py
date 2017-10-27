@@ -241,14 +241,14 @@ sessions = [
     #                             },
     #     "bind_source": ("172.29.70.249", 0)
     # },
-    {
-        "host": ("172.29.70.13", 80),
-        "session_headers": {
-                                "Host": "clusteras.tomsk.test",
-                                "Connection": "keep-alive",
-                                },
-        "bind_source": ("172.29.70.253", 0)
-    },
+    # {
+    #     "host": ("172.29.70.13", 80),
+    #     "session_headers": {
+    #                             "Host": "clusteras.tomsk.test",
+    #                             "Connection": "keep-alive",
+    #                             },
+    #     "bind_source": ("172.29.70.253", 0)
+    # },
     # {
     #     "host": ("172.29.70.14", 80),
     #     "session_headers": {
@@ -339,6 +339,35 @@ sessions = [
     # },
 
 ]
+
+
+bind_sources = [
+    "172.29.70.249",
+    "172.29.70.250",
+    "172.29.70.251",
+    "172.29.70.252",
+    "172.29.70.253",
+]
+
+hosts = [
+    "172.29.70.21",
+    "172.29.70.22",
+    "172.29.70.23",
+    "172.29.70.24",
+]
+
+for host in hosts:
+    for bind_ip in bind_sources:
+        session = {
+            "host": ("{}".format(host), 80),
+            "session_headers": {
+                                    "Host": "clusteras.tomsk.test",
+                                    "Connection": "keep-alive",
+                                    },
+            "bind_source": ("{}".format(bind_ip), 0)
+        }
+        sessions.append(session)
+        session = {}
 
 st = time.time()
 

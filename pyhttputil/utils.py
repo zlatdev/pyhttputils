@@ -189,11 +189,11 @@ def generateRequestv3(method, url, headers=None, cookies=None, params=None, payl
 
     else:
         if payload:
-            request_headers.append(request_str % (method.upper(), url, version))
+            # request_headers.append(request_str % (method.upper(), url, version))
             request_headers.append("Content-Length: %d" % len(str(payload)))
             request_body = str(payload)
         else:
-            request_headers.append(request_str % (method.upper(), url, version))
+            # request_headers.append(request_str % (method.upper(), url, version))
             request_body = ""
 
     for header, value in headers:
