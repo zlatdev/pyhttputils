@@ -189,12 +189,10 @@ def generateRequestv3(method, url, headers=None, cookies=None, params=None, payl
 
     else:
         if payload:
-            # request_headers.append(request_str % (method.upper(), url, version))
             request_headers.append("Content-Length: %d" % len(str(payload)))
-            request_body = str(payload)
+            request_body = request_body.append(ready_payload[0])
         else:
-            # request_headers.append(request_str % (method.upper(), url, version))
-            request_body = ""
+            request_body = []
 
     for header, value in headers:
         # print(2, header, value)
@@ -205,6 +203,7 @@ def generateRequestv3(method, url, headers=None, cookies=None, params=None, payl
 
     request_headers.append("")
     request_headers.append("")
+
 
     return (request_headers, request_body)
 
@@ -530,11 +529,9 @@ def sendRequest(request_obj, host=None, use_ssl=False, sock=None, resp_format=No
 def _generateSampleAlphaChars(length):
     """
         Generate random char string exact length
-        
-        
+
         @param length: string length of random string
         @return: random string 
-        
     """
     pop_us = "ABCDEFGHIJKLMNOPQURSTUVWXYZabcdefghijklmnopqrstuvwxyz"
     if length > len(pop_us):
@@ -646,6 +643,7 @@ def _isChunked(responseHeaders):
 
     return transferencoding
 
+
 def generateListOfURLS (number, predefined=False,urlftk=0.1):
     """ 
     @param number: amount of generated URLS
@@ -668,6 +666,7 @@ def generateListOfURLS (number, predefined=False,urlftk=0.1):
 
     return url_list
 
+
 def generateListOfURLSwMetaChars (number):
     """ 
     @param number: amount of generated URLS
@@ -679,6 +678,7 @@ def generateListOfURLSwMetaChars (number):
         number -= 1
     return url_list
 
+
 def generateListOfHeaders (number):
     """ 
     @param number: amount of generated headers
@@ -689,6 +689,7 @@ def generateListOfHeaders (number):
         header_list["H"+_generateSampleAlphaChars(DEFAULT_LENGTH_HEADER)]= _generateSampleAlphaChars(DEFAULT_LENGTH_HEADER)
         number -= 1
     return header_list
+
 
 def generateListOfParameters (number,predefined=False):
     """ 
@@ -710,6 +711,7 @@ def generateListOfParameters (number,predefined=False):
             param_list.append("%s" % (_generateSampleAlphaChars(DEFAULT_LENGTH_PARAM)))
     return param_list
 
+
 def generateListOfValues (number):
     """ 
     @param number: amount of generated parameters    
@@ -721,8 +723,10 @@ def generateListOfValues (number):
         number -=1
     return value_list
 
+
 def generateIPv4Address():
-    return "%s.%s.%s.%s" % (randint(1,255),randint(1,255),randint(1,255),randint(1,255))
+    return "%s.%s.%s.%s" % (randint(1, 255), randint(1, 255), randint(1, 255), randint(1, 255))
+
 
 def mapParameterValue(listParam, listValue):
     datadict = {}
