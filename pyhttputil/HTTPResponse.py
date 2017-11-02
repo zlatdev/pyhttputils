@@ -48,34 +48,37 @@ class HTTPResponse(object):
     def checkAssertion(self, cond=None):
         if cond:
             results = []
-            for assert_item in cond.items():
-                try:
-                    key, value = assert_item
+            try:
+                for assert_item in cond.items():
+                    try:
+                        key, value = assert_item
 
-                    if key == "payload":
-                        assert value.encode() in self[key]
-                        results.append(True)
+                        if key == "payload":
+                            assert value.encode() in self[key]
+                            results.append(True)
 
-                    if key == "headers":
-                        for header in self[key]:
-                            try:
-                                assert value in header
-                                results.append(True)
-                                break
-                            except AssertionError:
-                                continue
-                        else:
-                            results.append(False)
+                        if key == "headers":
+                            for header in self[key]:
+                                try:
+                                    assert value in header
+                                    results.append(True)
+                                    break
+                                except AssertionError:
+                                    continue
+                            else:
+                                results.append(False)
 
-                    if key == "status":
-                        assert value in self[key]
-                        results.append(True)
+                        if key == "status":
+                            assert value in self[key]
+                            results.append(True)
 
-                except AssertionError:
-                    results.append(False)
+                    except AssertionError:
+                        results.append(False)
+            except TypeError:
+                results.append(False)
             return all(results)
         else:
-            return False
+            return None
 
     def unchunkPayload(self):
         payload = self.payload.decode("utf-8")
