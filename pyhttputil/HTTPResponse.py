@@ -58,15 +58,17 @@ class HTTPResponse(object):
                             results.append(True)
 
                         if key == "headers":
-                            for header in self[key]:
-                                try:
-                                    assert value in header
-                                    results.append(True)
-                                    break
-                                except AssertionError:
-                                    continue
-                            else:
-                                results.append(False)
+                            for assert_header, assert_value in value.items():
+                                assert_result = "{}: {}".format(assert_header, assert_value)
+                                for header in self[key]:
+                                    try:
+                                        assert assert_result in header
+                                        results.append(True)
+                                        break
+                                    except AssertionError:
+                                        continue
+                                else:
+                                    results.append(False)
 
                         if key == "status":
                             assert value in self[key]
