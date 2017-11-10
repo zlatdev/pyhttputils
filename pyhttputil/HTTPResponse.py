@@ -43,7 +43,7 @@ class HTTPResponse(object):
             self.callAction(doaction)
 
     def callAction(self, doaction):
-        doaction(self)
+        self.doactionresult = doaction(self)
 
     def checkAssertion(self, cond=None):
         if cond:

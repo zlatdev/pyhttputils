@@ -61,6 +61,22 @@ class HTTPSession(object):
         except KeyError:
                 self.ipv6 = False
 
+        try:
+            if kwargs["doassert"]:
+                self.doassert = True
+            else:
+                self.doassert = False
+        except KeyError:
+            self.doassert = False
+
+        try:
+            if kwargs["bind_source"]:
+                self.bind = kwargs["bind_source"]
+            else:
+                self.bind = None
+        except KeyError:
+            self.bind = None
+
         self.sock = None
         self.response = None
 
@@ -172,7 +188,7 @@ class HTTPSession(object):
             else:
                 self.doassert = False
         except KeyError:
-            self.doassert = False
+            pass
 
         try:
             if kwargs["bind_source"]:
@@ -279,17 +295,18 @@ class HTTPSession(object):
                     # if self.session_cookies.cookies:
                     # for cookie in
                     # print (self.request.headers["Cookie"])
-                    print_resp = self.request.resp_format.lower()
-                    if "status" in print_resp:
-                        print(self.response.status)
-                    if "headers" in print_resp:
-                        print(self.response.headers)
-                    if "body" in print_resp:
-                        print(self.response.payload)
-                    if "all" in print_resp:
-                        print(self.response.status)
-                        print(self.response.headers)
-                        print(self.response.payload)
+                    if self.request.resp_format:
+                        print_resp = self.request.resp_format.lower()
+                        if "status" in print_resp:
+                            print(self.response.status)
+                        if "headers" in print_resp:
+                            print(self.response.headers)
+                        if "body" in print_resp:
+                            print(self.response.payload)
+                        if "all" in print_resp:
+                            print(self.response.status)
+                            print(self.response.headers)
+                            print(self.response.payload)
 
                 self.request.headers = req_headers[:]
                 self.request.cookies = HTTPCookies(cookies=req_cookie)

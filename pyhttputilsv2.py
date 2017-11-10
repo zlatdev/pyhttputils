@@ -2353,8 +2353,7 @@ class HTTPClient(threading.Thread):
     """
 
     def __init__(self, host=None, secure = False, delay=0, repeat=10, flow=None, session_headers = None, prefix_url="", session_http_version="", resp_format=None, xff=True, debug=False, *args, **kwargs):
-        
-        """        
+        """
         @param command:
         @type command:
         @param c_args:
