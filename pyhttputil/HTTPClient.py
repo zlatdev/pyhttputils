@@ -49,7 +49,7 @@ class HTTPClient(threading.Thread):
                 self.currenthttpsession.runSession(self.host, self.secure, self.delay)
             ct = time.time()
 
-        print("Client", threading.currentThread().name, multiprocessing.current_process().name, "start on host:", self.host)
+        print("Client", threading.currentThread().name, multiprocessing.current_process().name, "stop on host:", self.host)
 
 
 

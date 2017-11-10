@@ -190,13 +190,14 @@ class HTTPSession(object):
         except KeyError:
             pass
 
+
         try:
             if kwargs["bind_source"]:
                 self.bind = kwargs["bind_source"]
             else:
                 self.bind = None
         except KeyError:
-            self.bind = None
+            pass
 
         if host:
             self.host = host
