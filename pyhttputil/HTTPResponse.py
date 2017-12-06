@@ -1,5 +1,7 @@
 from .HTTPCookies import *
 
+import zlib
+
 
 class HTTPResponse(object):
     """
@@ -36,8 +38,10 @@ class HTTPResponse(object):
         self.cookies = HTTPCookies(self.headers)
         self.sock = sock
         self.payload = payload
+        self.raw_payload = payload
 
         self.doassert = self.checkAssertion(doassert)
+
 
         if doaction:
             self.callAction(doaction)
@@ -83,8 +87,21 @@ class HTTPResponse(object):
             return None
 
     def unchunkPayload(self):
-        payload = self.payload.decode("utf-8")
-        payload = payload.split("\r\n")
+
+        data = self.payload.split(b"\r\n")
+
+        c_data = bytes()
+
+        for i in range(1, len(data), 2):
+            if data[i - 1].decode() == str(hex(len(data[i])))[2:] and data[i - i].decode() != "0":
+                c_data += data[i]
+        self.payload = c_data
+        return self
+
+    def decompressPayload(self):
+        self.payload = zlib.decompress(self.payload, 47)
+        return self
+
 
 
     def __getitem__(self, name):
