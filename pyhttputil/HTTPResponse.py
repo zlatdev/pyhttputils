@@ -87,15 +87,20 @@ class HTTPResponse(object):
             return None
 
     def unchunkPayload(self):
+        cdata = bytes()
+        data = self.payload.split(b"\r\n", 1)
+        chunk_len = data[0]
+        data = data[1]
 
-        data = self.payload.split(b"\r\n")
+        while chunk_len.decode() != "0":
+            chunk_data = data[: int("0x" + chunk_len.decode(), 16)]
+            data = data[int("0x" + chunk_len.decode(), 16) + 2:]
+            data = data.split(b"\r\n", 1)
+            chunk_len = data[0]
+            data = data[1]
+            cdata += chunk_data
 
-        c_data = bytes()
-
-        for i in range(1, len(data), 2):
-            if data[i - 1].decode() == str(hex(len(data[i])))[2:] and data[i - i].decode() != "0":
-                c_data += data[i]
-        self.payload = c_data
+        self.payload = cdata
         return self
 
     def decompressPayload(self):
