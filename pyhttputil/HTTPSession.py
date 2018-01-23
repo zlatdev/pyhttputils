@@ -212,7 +212,7 @@ class HTTPSession(object):
             else:
                 self.ipv6 = False
         except KeyError:
-                self.ipv6 = False
+                pass
 
         if delay:
             self.delay = delay
