@@ -37,7 +37,7 @@ class HTTPClient(threading.Thread):
 
     def run(self):
 
-        print("Client ", threading.currentThread().name, multiprocessing.current_process().name, "start on host:", self.host)
+        print("Client ", threading.currentThread().name, multiprocessing.current_process().name, "start on host:", self.host, "from ip", self.currenthttpsession.bind)
 
         ct = st = time.time()
         while ct - st < self.time:
